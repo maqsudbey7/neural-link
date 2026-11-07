@@ -1,0 +1,1367 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="Neural Link — hold holograms in your hand. Resize, rotate and stretch neon shapes with your fingers, right in the browser. Qo'lingizda gologramma.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Neural Link">
+<meta property="og:title" content="NEURAL LINK // holograms in your hand">
+<meta property="og:description" content="Hold, resize and spin neon holograms with your bare hands. Runs locally in your browser.">
+<meta property="og:image" content="icons/icon-512.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Neural Link</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000;
+    --fg: #e6fff2;
+    --a: #00ff88;
+    --a2: #00e5ff;
+    --muted: rgba(230,255,242,.6);
+    --faint: rgba(230,255,242,.35);
+    --glass: rgba(8,12,12,.55);
+    --border: rgba(255,255,255,.1);
+    --red: #ff3355;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #000; } }
+  :root[data-theme="dark"] { --bg: #000; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font-family: var(--mono);
+    overflow: hidden; -webkit-font-smoothing: antialiased; user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent; overscroll-behavior: none; touch-action: manipulation; }
+  button { font: inherit; color: inherit; }
+
+  #cam { position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; opacity: 0; pointer-events: none; }
+  #stage { position: fixed; inset: 0; }
+  #bg, #fx, #hud { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #fx { mix-blend-mode: screen; pointer-events: none; }
+  #hud { pointer-events: none; }
+  .scan { position: fixed; inset: 0; pointer-events: none; z-index: 3;
+    background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.12) 3px); mix-blend-mode: multiply; }
+  #flash { position: fixed; inset: 0; background: #d6fbff; opacity: 0; pointer-events: none; z-index: 30; mix-blend-mode: screen; }
+  #flash.go { animation: flash .45s ease-out; }
+  @keyframes flash { from { opacity: .7; } to { opacity: 0; } }
+  .glass { background: var(--glass); border: 1px solid var(--border); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    box-shadow: 0 12px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06); }
+
+  /* ---------- O'ng menyu ---------- */
+  #rail { position: fixed; z-index: 8; right: max(10px, env(safe-area-inset-right)); top: 50%; translate: 0 -50%;
+    display: flex; flex-direction: column; gap: 3px; padding: 6px; border-radius: 22px; opacity: 0; transition: opacity .8s; }
+  body.running #rail { opacity: 1; }
+  .rb { all: unset; box-sizing: border-box; position: relative; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center;
+    cursor: pointer; color: var(--muted); transition: background .2s, color .2s, box-shadow .2s; }
+  .rb:hover { background: rgba(255,255,255,.07); color: var(--fg); }
+  .rb:focus-visible { outline: 2px solid var(--a); outline-offset: -2px; }
+  .rb svg { width: 21px; height: 21px; }
+  .rb.on { color: var(--a); background: color-mix(in srgb, var(--a) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--a) 35%, transparent); }
+  .rb.rec { color: #fff; background: var(--red); }
+  .rb img { width: 34px; height: 34px; pointer-events: none; }
+  .rb .sw { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, var(--a), var(--a2)); box-shadow: 0 0 12px var(--a); }
+  .rb .tag { position: absolute; bottom: 2px; left: 0; right: 0; text-align: center; font-size: 7.5px; font-weight: 700; letter-spacing: .5px; color: var(--a); }
+  .rb[hidden] { display: none; }
+  .rsep { height: 1px; margin: 3px 8px; background: var(--border); }
+  @media (hover: hover) {
+    .rb[data-tip]:hover::after { content: attr(data-tip); position: absolute; right: 54px; top: 50%; translate: 0 -50%; padding: 6px 10px; border-radius: 9px;
+      background: rgba(8,12,12,.92); border: 1px solid var(--border); font-size: 11.5px; color: var(--fg); white-space: nowrap; pointer-events: none; }
+  }
+  .fly { position: fixed; z-index: 9; right: calc(max(10px, env(safe-area-inset-right)) + 66px); padding: 8px; border-radius: 18px; display: flex; gap: 6px;
+    opacity: 0; pointer-events: none; transform: translateX(8px); transition: opacity .2s, transform .2s; }
+  .fly.open { opacity: 1; pointer-events: auto; transform: none; }
+  #flyShapes { flex-wrap: wrap; width: 236px; }
+  .sh { all: unset; box-sizing: border-box; cursor: pointer; width: 70px; padding: 6px 2px 5px; border-radius: 12px; text-align: center; font-size: 9.5px; font-weight: 700;
+    letter-spacing: .4px; color: var(--muted); border: 1px solid transparent; transition: background .2s, border-color .2s; }
+  .sh img { width: 46px; height: 46px; display: block; margin: 0 auto 2px; }
+  .sh:hover { background: rgba(255,255,255,.06); }
+  .sh.on { border-color: color-mix(in srgb, var(--a) 55%, transparent); background: color-mix(in srgb, var(--a) 10%, transparent); color: var(--a); }
+  #flyMore { flex-direction: column; min-width: 170px; }
+  .mi { all: unset; box-sizing: border-box; cursor: pointer; display: flex; justify-content: space-between; gap: 14px; padding: 9px 12px; border-radius: 10px; font-size: 12px; color: var(--muted); }
+  .mi:hover { background: rgba(255,255,255,.06); color: var(--fg); }
+  .mi b { color: var(--a); }
+  .mi[hidden] { display: none; }
+
+  #tip { position: fixed; z-index: 6; left: 50%; bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px)); translate: -50% 0; padding: 11px 18px; border-radius: 999px;
+    font-size: 13px; color: var(--fg); white-space: nowrap; max-width: calc(100vw - 90px); overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .5s; }
+  #tip.show { opacity: 1; }
+  #share { all: unset; box-sizing: border-box; position: fixed; z-index: 7; left: 50%; translate: -50% 0; bottom: calc(max(18px, env(safe-area-inset-bottom)) + 56px);
+    padding: 11px 22px; border-radius: 999px; background: var(--a); color: #000; font-weight: 800; letter-spacing: 2px; font-size: 13px; cursor: pointer;
+    box-shadow: 0 0 30px color-mix(in srgb, var(--a) 55%, transparent); opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .25s, transform .25s; }
+  #share.show { opacity: 1; pointer-events: auto; transform: none; }
+
+  /* ---------- Boshlash ekrani ---------- */
+  #boot { position: fixed; inset: 0; z-index: 10; background: #000; display: flex; overflow-y: auto;
+    padding: max(24px, calc(env(safe-area-inset-top) + 16px)) 16px max(16px, env(safe-area-inset-bottom)); transition: opacity .6s, visibility .6s; }
+  body.running #boot { opacity: 0; visibility: hidden; }
+  #rain { position: fixed; inset: 0; width: 100%; height: 100%; opacity: .45; }
+  .card { position: relative; margin: auto; width: min(560px, 100%); padding: 26px 22px 20px; border-radius: 26px; text-align: center; }
+  .langsw { position: absolute; top: 14px; right: 14px; display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.05); }
+  .langsw button { all: unset; box-sizing: border-box; cursor: pointer; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--faint); }
+  .langsw button.on { color: #000; background: var(--a); }
+  .logo { margin: 10px 0 6px; font-size: clamp(7px, 2vw, 11.5px); line-height: 1.12; color: var(--a); white-space: pre; text-shadow: 0 0 14px rgba(0,255,136,.55); overflow: hidden; }
+  .tagline { margin: 0 auto 18px; max-width: 400px; font-size: 14px; line-height: 1.55; color: var(--muted); }
+  .tips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 0 0 20px; }
+  .tips div { padding: 12px 6px 10px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); font-size: 11px; color: var(--muted); line-height: 1.35; }
+  .tips i { display: block; font-style: normal; font-size: 26px; margin-bottom: 6px; }
+  #go { all: unset; box-sizing: border-box; cursor: pointer; display: block; width: 100%; padding: 15px; border-radius: 16px; background: var(--a); color: #000;
+    font-weight: 800; letter-spacing: 3px; font-size: 14px; box-shadow: 0 10px 36px rgba(0,255,136,.3); transition: transform .15s, box-shadow .2s; }
+  #go:hover { transform: translateY(-2px); box-shadow: 0 14px 44px rgba(0,255,136,.45); }
+  #go[disabled] { cursor: progress; opacity: .7; }
+  #status { min-height: 18px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+  #status.err { color: #ff8a9a; }
+  .foot { margin-top: 6px; font-size: 11px; color: var(--faint); }
+
+  @media (max-width: 640px) {
+    .tips { grid-template-columns: repeat(2, 1fr); }
+    .card { padding: 22px 14px 16px; }
+    .rb { width: 40px; height: 40px; border-radius: 12px; } .rb svg { width: 19px; height: 19px; } .rb img { width: 30px; height: 30px; }
+    #rail { padding: 4px; gap: 2px; border-radius: 18px; }
+    .fly { right: calc(max(10px, env(safe-area-inset-right)) + 56px); }
+    #flyShapes { width: 178px; } .sh { width: 77px; }
+    #tip { font-size: 12px; max-width: calc(100vw - 32px); white-space: normal; text-align: center; border-radius: 18px; }
+    .logo { margin-top: 30px; }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<video id="cam" playsinline muted autoplay></video>
+<div id="stage"><canvas id="bg"></canvas><canvas id="fx"></canvas><canvas id="hud"></canvas></div>
+<div class="scan"></div>
+<div id="flash"></div>
+
+<nav id="rail" class="glass" aria-label="Menu">
+  <button class="rb" id="rShape" data-ti="mShape"><img id="shapeThumb" alt=""></button>
+  <button class="rb" id="rColor" data-ti="mColor"><span class="sw"></span></button>
+  <div class="rsep"></div>
+  <button class="rb" id="rRep" data-ti="mRep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7" stroke-dasharray="3 3"/><path d="M12 1.5v2M12 20.5v2M1.5 12h2M20.5 12h2"/></svg></button>
+  <button class="rb" id="rPortal" data-ti="mPortal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><ellipse cx="12" cy="12" rx="8.5" ry="8.5"/><path d="M12 3.5c3 2.5 3 14.5 0 17M7 6c4 1 6 8 2 12" opacity=".6"/></svg></button>
+  <button class="rb" id="rPlasma" data-ti="mPlasma"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 5 13h6l-1 9 8-11h-6z"/></svg></button>
+  <button class="rb" id="rFace" data-ti="mFace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3c4.5 0 7 3.4 7 8.2 0 5.2-3.3 9.8-7 9.8s-7-4.6-7-9.8C5 6.4 7.5 3 12 3z"/><path d="M9 10h.01M15 10h.01M9.5 15.5c1.5 1 3.5 1 5 0M12 3v18M5.5 9h13" opacity=".5"/></svg></button>
+  <button class="rb" id="rVision" data-ti="mVision"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="tag" id="vTag"></span></button>
+  <div class="rsep"></div>
+  <button class="rb" id="rShot" data-ti="mShot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+  <button class="rb" id="rRec" data-ti="mRec"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5" fill="currentColor"/></svg></button>
+  <button class="rb" id="rMore" data-ti="mMore" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+</nav>
+<div id="flyShapes" class="fly glass"></div>
+<div id="flyMore" class="fly glass">
+  <button class="mi" id="mSnd"><span data-i="snd"></span><b id="sName"></b></button>
+  <button class="mi" id="mLang"><span data-i="lang"></span><b id="lName"></b></button>
+  <button class="mi" id="mCam" hidden><span data-i="cam"></span><b>⇄</b></button>
+</div>
+<div id="tip" class="glass"></div>
+<button id="share">↗ <span data-i="share"></span></button>
+
+<div id="boot">
+  <canvas id="rain"></canvas>
+  <div class="card glass">
+    <div class="langsw"><button data-l="en">EN</button><button data-l="uz">UZ</button></div>
+<pre class="logo">███╗   ██╗███████╗██╗   ██╗██████╗  █████╗ ██╗
+████╗  ██║██╔════╝██║   ██║██╔══██╗██╔══██╗██║
+██╔██╗ ██║█████╗  ██║   ██║██████╔╝███████║██║
+██║╚██╗██║██╔══╝  ██║   ██║██╔══██╗██╔══██║██║
+██║ ╚████║███████╗╚██████╔╝██║  ██║██║  ██║███████╗
+╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝  L I N K</pre>
+    <p class="tagline" data-i="tagline"></p>
+    <div class="tips" id="tips"></div>
+    <button id="go" data-i="start"></button>
+    <div id="status"></div>
+    <div class="foot" data-i="foot"></div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
+import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
+import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+
+const VISION = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+const MODELS = {
+  hand: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+  face: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+  seg: "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/1/selfie_segmenter.tflite",
+};
+const OPTS = {
+  hand: { runningMode: "VIDEO", numHands: 2, minHandDetectionConfidence: 0.55, minHandPresenceConfidence: 0.55, minTrackingConfidence: 0.5 },
+  face: { runningMode: "VIDEO", numFaces: 1, minFaceDetectionConfidence: 0.5, minFacePresenceConfidence: 0.5, minTrackingConfidence: 0.5 },
+  seg: { runningMode: "VIDEO", outputConfidenceMasks: true, outputCategoryMask: false },
+};
+
+const $ = id => document.getElementById(id);
+const video = $("cam"), bgCanvas = $("bg"), fxCanvas = $("fx"), hudCanvas = $("hud"), hud = hudCanvas.getContext("2d");
+const TAU = Math.PI * 2;
+const IS_MOBILE = matchMedia("(pointer: coarse)").matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const ORANGE = "#ff9a2e";
+const range = (n, f) => Array.from({ length: n }, (_, i) => f(i, n));
+const clamp = THREE.MathUtils.clamp;
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+// ============================================================
+//  TILLAR
+// ============================================================
+const I18N = {
+  en: {
+    tagline: "Hold a hologram in your hand. Spread your fingers to resize it, twist your wrist to spin it.",
+    tips: [["✋", "show your hand"], ["🤏", "spread fingers — resize"], ["🔄", "twist wrist — rotate"], ["🙌", "two hands — stretch"]],
+    start: "START", loading: "LOADING…", foot: "runs on your device · video never leaves it",
+    sCam: "Opening camera…", sModel: "Loading hand tracking…", denied: "Camera access denied — please allow it in your browser.",
+    insecure: "Camera needs https — open the site over https.", error: "Something went wrong",
+    mShape: "Shape", mColor: "Color", mRep: "Repulsor (open palm → fist)", mPortal: "Portal (draw a circle with ☝️)", mPlasma: "Plasma (two hands)",
+    mFace: "Face mesh", mVision: "Vision", mShot: "Photo", mRec: "Video", mMore: "More", snd: "Sound", lang: "Language", cam: "Switch camera", share: "SHARE",
+    on: "ON", off: "OFF", vis: ["RAW", "NIGHT", "MATRIX"],
+    shapes: ["GLOBE", "TESSERACT", "CORE", "HELIX", "REACTOR", "ATOM"],
+    t: { hand: "✋ Show your hand to the camera", zoom: "🤏 Spread thumb and index — make it bigger", twist: "🔄 Twist your wrist — spin the hologram",
+      two: "🙌 Use both hands — stretch it", next: "✌️ Hold the V sign — next shape", fist: "✊ Make a fist — hide it", portal: "☝️ Draw a circle in the air — portal",
+      rep: "✋ Hold your palm open to charge, then make a fist" },
+    bPortal: "PORTAL", bRep: "REPULSOR", bCharged: "CHARGED", live: "LIVE",
+  },
+  uz: {
+    tagline: "Gologrammani qo'lingizda ushlang. Barmoqlarni yozsangiz — kattalashadi, bilakni bursangiz — aylanadi.",
+    tips: [["✋", "qo'lingizni ko'rsating"], ["🤏", "barmoqni yozing — kattalashadi"], ["🔄", "bilakni buring — aylanadi"], ["🙌", "ikki qo'l — cho'zing"]],
+    start: "BOSHLASH", loading: "YUKLANMOQDA…", foot: "qurilmangizda ishlaydi · video hech qayerga yuborilmaydi",
+    sCam: "Kamera ochilmoqda…", sModel: "Qo'l kuzatuvi yuklanmoqda…", denied: "Kameraga ruxsat berilmadi — brauzerda ruxsat bering.",
+    insecure: "Kamera https talab qiladi — saytni https orqali oching.", error: "Xatolik yuz berdi",
+    mShape: "Shakl", mColor: "Rang", mRep: "Zaryad (ochiq kaft → musht)", mPortal: "Portal (☝️ bilan doira chizing)", mPlasma: "Plazma (ikki qo'l)",
+    mFace: "Yuz to'ri", mVision: "Ko'rinish", mShot: "Surat", mRec: "Video", mMore: "Yana", snd: "Ovoz", lang: "Til", cam: "Kamerani almashtirish", share: "ULASHISH",
+    on: "YONIQ", off: "O'CHIQ", vis: ["ODDIY", "TUNGI", "MATRITSA"],
+    shapes: ["GLOBUS", "TESSERAKT", "YADRO", "SPIRAL", "REAKTOR", "ATOM"],
+    t: { hand: "✋ Qo'lingizni kameraga ko'rsating", zoom: "🤏 Bosh va ko'rsatkich barmoqni yozing — kattalashadi", twist: "🔄 Bilagingizni buring — gologramma aylanadi",
+      two: "🙌 Ikkala qo'l bilan cho'zing", next: "✌️ V belgisini ushlab turing — keyingi shakl", fist: "✊ Musht qiling — yashirinadi", portal: "☝️ Havoda doira chizing — portal",
+      rep: "✋ Kaftni ochib zaryadlang, keyin musht qiling" },
+    bPortal: "PORTAL", bRep: "REPULSOR", bCharged: "ZARYADLANDI", live: "JONLI",
+  },
+};
+let lang = store.get("nl-lang") || (/^en/i.test(navigator.language || "") ? "en" : "uz");
+const t = k => I18N[lang][k];
+
+// ============================================================
+//  Sozlamalar
+// ============================================================
+const PALETTES = [["#00ff88", "#00e5ff"], ["#00c8ff", "#7a6bff"], ["#ff3df2", "#8a5bff"], ["#ffb300", "#ff4d1f"], ["#ff2d6f", "#ff9ad8"], ["#e6f7ff", "#7fd6ff"]];
+const num = (k, d, m) => { const v = parseInt(store.get(k) ?? d, 10); return Number.isFinite(v) ? ((v % m) + m) % m : d; };
+const S = {
+  shape: num("nl-shape", 0, 6), color: num("nl-color", 0, PALETTES.length), vision: num("nl-vis", 0, 3),
+  rep: store.get("nl-rep") === "1", portal: store.get("nl-portal") !== "0", plasma: store.get("nl-plasma") !== "0", face: store.get("nl-face") === "1",
+  sound: store.get("nl-snd") !== "0",
+};
+let learned = {}; try { learned = JSON.parse(store.get("nl-learned") || "{}") || {}; } catch {}
+function learn(k) { if (learned[k]) return; learned[k] = 1; store.set("nl-learned", JSON.stringify(learned)); }
+
+// ============================================================
+//  BOOT
+// ============================================================
+const rainCv = $("rain"), rainCtx = rainCv.getContext("2d");
+const KATA = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜ0123456789";
+let drops = [], rainOn = true;
+function rainResize() { rainCv.width = innerWidth; rainCv.height = innerHeight; drops = range(Math.ceil(innerWidth / 16), () => Math.random() * -60); }
+rainResize(); addEventListener("resize", rainResize);
+(function rainLoop() {
+  if (!rainOn) return;
+  rainCtx.fillStyle = "rgba(0,0,0,.08)"; rainCtx.fillRect(0, 0, rainCv.width, rainCv.height);
+  rainCtx.font = "15px monospace";
+  drops.forEach((y, i) => {
+    rainCtx.fillStyle = Math.random() < 0.04 ? "#d8ffe8" : PALETTES[S.color][0];
+    rainCtx.fillText(KATA[(Math.random() * KATA.length) | 0], i * 16, y * 16);
+    drops[i] = y * 16 > rainCv.height && Math.random() > 0.975 ? 0 : y + 1;
+  });
+  setTimeout(() => requestAnimationFrame(rainLoop), 45);
+})();
+
+// ============================================================
+//  One Euro + moslashuvchan taxmin
+// ============================================================
+let procMs = 30;
+class OneEuro {
+  constructor(minCutoff = 1.4, beta = 0.012, dCutoff = 1.2) { Object.assign(this, { minCutoff, beta, dCutoff }); this.reset(); }
+  reset() { this.x = null; this.dx = 0; this.t = 0; }
+  static a(cutoff, dt) { const tau = 1 / (TAU * cutoff); return 1 / (1 + tau / dt); }
+  filter(x, t) {
+    if (this.x === null) { this.x = x; this.t = t; this.dx = 0; return x; }
+    const dt = Math.max(1e-3, t - this.t); this.t = t;
+    this.dx += OneEuro.a(this.dCutoff, dt) * ((x - this.x) / dt - this.dx);
+    this.x += OneEuro.a(this.minCutoff + this.beta * Math.abs(this.dx), dt) * (x - this.x);
+    return this.x;
+  }
+  predict(t) {
+    if (this.x === null) return 0;
+    const lead = clamp(procMs / 1000 + 0.03, 0.035, 0.1);
+    return this.x + this.dx * Math.min(0.13, Math.max(0, t - this.t + lead));
+  }
+}
+
+// ============================================================
+//  Kuzatuv — Web Worker
+// ============================================================
+const WORKER_SRC = `
+self.exports = {}; self.module = { exports: self.exports };
+let __nlFs = null; const __nl = {};
+async function __nlMake(Cls, model, opts) {
+  try { return [await Cls.createFromOptions(__nlFs, Object.assign({ baseOptions: { modelAssetPath: model, delegate: "GPU" } }, opts)), "GPU"]; }
+  catch (e) { return [await Cls.createFromOptions(__nlFs, Object.assign({ baseOptions: { modelAssetPath: model, delegate: "CPU" } }, opts)), "CPU"]; }
+}
+self.onmessage = async (e) => {
+  const d = e.data, X = self.exports;
+  if (d.type === "init") {
+    try {
+      importScripts(d.vision + "/vision_bundle.cjs");
+      __nlFs = await X.FilesetResolver.forVisionTasks(d.vision + "/wasm");
+      const [h, del] = await __nlMake(X.HandLandmarker, d.model, d.opts); __nl.hand = h;
+      postMessage({ type: "ready", delegate: del });
+    } catch (err) { postMessage({ type: "error", message: String((err && err.message) || err) }); }
+  } else if (d.type === "load") {
+    try {
+      const Cls = d.what === "face" ? X.FaceLandmarker : X.ImageSegmenter;
+      const [m] = await __nlMake(Cls, d.model, d.opts); __nl[d.what] = m;
+      const out = { type: "loaded", what: d.what };
+      if (d.what === "face") {
+        const pick = a => a.map(c => [c.start, c.end]);
+        out.tess = pick(Cls.FACE_LANDMARKS_TESSELATION);
+        out.contour = [].concat(pick(Cls.FACE_LANDMARKS_FACE_OVAL), pick(Cls.FACE_LANDMARKS_LIPS), pick(Cls.FACE_LANDMARKS_LEFT_EYE),
+          pick(Cls.FACE_LANDMARKS_RIGHT_EYE), pick(Cls.FACE_LANDMARKS_LEFT_EYEBROW), pick(Cls.FACE_LANDMARKS_RIGHT_EYEBROW));
+      }
+      postMessage(out);
+    } catch (err) { postMessage({ type: "loadError", what: d.what, message: String((err && err.message) || err) }); }
+  } else if (d.type === "frame") {
+    const out = { type: "result", handsRan: !!d.hands, faceRan: !!(d.face && __nl.face), landmarks: [], worldLandmarks: [], face: null, seg: null };
+    const tr = [];
+    try { if (d.hands) { const r = __nl.hand.detectForVideo(d.bitmap, d.ts); out.landmarks = r.landmarks; out.worldLandmarks = r.worldLandmarks; } } catch (err) {}
+    try {
+      if (d.face && __nl.face) {
+        const fr = __nl.face.detectForVideo(d.bitmap, d.ts);
+        if (fr.faceLandmarks && fr.faceLandmarks[0]) {
+          const L = fr.faceLandmarks[0], p = new Float32Array(L.length * 2);
+          for (let i = 0; i < L.length; i++) { p[i*2] = L[i].x; p[i*2+1] = L[i].y; }
+          out.face = p; tr.push(p.buffer);
+        }
+      }
+    } catch (err) {}
+    try {
+      if (d.seg && __nl.seg) {
+        const r = __nl.seg.segmentForVideo(d.bitmap, d.ts), m = r.confidenceMasks && r.confidenceMasks[0];
+        if (m) { const f = m.getAsFloat32Array(), u = new Uint8Array(f.length); for (let i = 0; i < f.length; i++) u[i] = f[i] * 255; out.seg = { data: u, w: m.width, h: m.height }; tr.push(u.buffer); }
+        if (r.confidenceMasks) r.confidenceMasks.forEach(x => x.close && x.close());
+      }
+    } catch (err) {}
+    d.bitmap.close();
+    postMessage(out, tr);
+  }
+};`;
+
+let worker = null, workerBusy = false, sentAt = 0, frameNo = 0, resizeOpts = true;
+let main = null, mainFs = null, visionMod = null;
+const ready = { face: false, seg: false }, loading = {};
+let tessConns = null, contourConns = null;
+function startWorker() {
+  return new Promise((resolve, reject) => {
+    let w;
+    try { w = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type: "text/javascript" }))); } catch (e) { reject(e); return; }
+    const timer = setTimeout(() => { w.terminate(); reject(new Error("worker timeout")); }, 40000);
+    w.onmessage = e => {
+      if (e.data.type === "ready") { clearTimeout(timer); resolve(w); }
+      else if (e.data.type === "error") { clearTimeout(timer); w.terminate(); reject(new Error(e.data.message)); }
+    };
+    w.onerror = e => { clearTimeout(timer); w.terminate(); reject(e); };
+    w.postMessage({ type: "init", vision: VISION, model: MODELS.hand, opts: OPTS.hand });
+  });
+}
+async function startMainThread() {
+  visionMod = await import(`${VISION}/vision_bundle.mjs`);
+  mainFs = await visionMod.FilesetResolver.forVisionTasks(`${VISION}/wasm`);
+  const mk = (Cls, what, delegate) => Cls.createFromOptions(mainFs, { baseOptions: { modelAssetPath: MODELS[what], delegate }, ...OPTS[what] });
+  main = { mk };
+  try { main.hand = await mk(visionMod.HandLandmarker, "hand", "GPU"); } catch { main.hand = await mk(visionMod.HandLandmarker, "hand", "CPU"); }
+}
+const pickConns = Cls => { const pick = a => a.map(c => [c.start, c.end]); return { tess: pick(Cls.FACE_LANDMARKS_TESSELATION),
+  contour: [].concat(pick(Cls.FACE_LANDMARKS_FACE_OVAL), pick(Cls.FACE_LANDMARKS_LIPS), pick(Cls.FACE_LANDMARKS_LEFT_EYE), pick(Cls.FACE_LANDMARKS_RIGHT_EYE),
+    pick(Cls.FACE_LANDMARKS_LEFT_EYEBROW), pick(Cls.FACE_LANDMARKS_RIGHT_EYEBROW)) }; };
+function loadModel(what) {
+  if (ready[what]) return Promise.resolve();
+  if (loading[what]) return loading[what];
+  const done = msg => { if (what === "face") { tessConns = msg.tess; contourConns = msg.contour; } ready[what] = true; };
+  loading[what] = new Promise(async (resolve, reject) => {
+    if (worker) {
+      const on = e => {
+        if (e.data.type === "loaded" && e.data.what === what) { worker.removeEventListener("message", on); done(e.data); resolve(); }
+        else if (e.data.type === "loadError" && e.data.what === what) { worker.removeEventListener("message", on); loading[what] = null; reject(new Error(e.data.message)); }
+      };
+      worker.addEventListener("message", on);
+      worker.postMessage({ type: "load", what, model: MODELS[what], opts: OPTS[what] });
+    } else {
+      try {
+        const Cls = what === "face" ? visionMod.FaceLandmarker : visionMod.ImageSegmenter;
+        try { main[what] = await main.mk(Cls, what, "GPU"); } catch { main[what] = await main.mk(Cls, what, "CPU"); }
+        done(what === "face" ? pickConns(Cls) : {}); resolve();
+      } catch (e) { loading[what] = null; reject(e); }
+    }
+  });
+  return loading[what];
+}
+async function sendFrame() {
+  if (video.readyState < 2 || !video.videoWidth) return;
+  if (worker && workerBusy) return;
+  const ts = performance.now(), wantFace = S.face && ready.face, doSeg = ready.seg && S.vision === 2;
+  const slow = (wantFace || doSeg) && procMs > 45, alt = frameNo & 1;
+  const doHands = !slow || alt === 0, doFace = wantFace && (!slow || alt === 1), doSegF = doSeg && (!slow || alt === 1);
+  frameNo++;
+  if (worker) {
+    workerBusy = true; sentAt = ts;
+    try {
+      let bmp;
+      const vw = video.videoWidth, vh = video.videoHeight, long = Math.max(vw, vh), TARGET = doFace || doSegF ? 640 : 480;
+      if (resizeOpts && long > TARGET + 32) {
+        const k = TARGET / long;
+        try { bmp = await createImageBitmap(video, { resizeWidth: Math.round(vw * k), resizeHeight: Math.round(vh * k), resizeQuality: "low" }); } catch { resizeOpts = false; }
+      }
+      if (!bmp) bmp = await createImageBitmap(video);
+      worker.postMessage({ type: "frame", bitmap: bmp, ts, face: doFace, hands: doHands, seg: doSegF }, [bmp]);
+    } catch { workerBusy = false; }
+  } else if (main) {
+    try {
+      const out = { handsRan: doHands, faceRan: doFace && !!main.face, landmarks: [], worldLandmarks: [], face: null, seg: null };
+      if (doHands) { const r = main.hand.detectForVideo(video, ts); out.landmarks = r.landmarks; out.worldLandmarks = r.worldLandmarks; }
+      if (doFace && main.face) { const fr = main.face.detectForVideo(video, ts); const L = fr.faceLandmarks?.[0]; if (L) { out.face = new Float32Array(L.length * 2); L.forEach((p, i) => { out.face[i*2] = p.x; out.face[i*2+1] = p.y; }); } }
+      if (doSegF && main.seg) {
+        const r = main.seg.segmentForVideo(video, ts), m = r.confidenceMasks?.[0];
+        if (m) { const f = m.getAsFloat32Array(), u = new Uint8Array(f.length); for (let i = 0; i < f.length; i++) u[i] = f[i] * 255; out.seg = { data: u, w: m.width, h: m.height }; }
+        r.confidenceMasks?.forEach(x => x.close?.());
+      }
+      procMs = procMs * 0.85 + (performance.now() - ts) * 0.15;
+      onResult(out);
+    } catch (e) { console.warn(e); }
+  }
+}
+function detectLoop() {
+  if (worker) worker.addEventListener("message", e => { if (e.data.type === "result") { workerBusy = false; procMs = procMs * 0.85 + (performance.now() - sentAt) * 0.15; onResult(e.data); } });
+  if ("requestVideoFrameCallback" in HTMLVideoElement.prototype) {
+    const cb = () => { sendFrame(); video.requestVideoFrameCallback(cb); };
+    video.requestVideoFrameCallback(cb);
+  } else {
+    let last = -1;
+    const cb = () => { if (video.currentTime !== last) { last = video.currentTime; sendFrame(); } requestAnimationFrame(cb); };
+    requestAnimationFrame(cb);
+  }
+}
+
+// ============================================================
+//  Ovoz
+// ============================================================
+const sfx = { ctx: null, master: null, noise: null, charge: null };
+function initAudio() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)(); const m = ctx.createGain(); m.gain.value = 0.5; m.connect(ctx.destination);
+    const nb = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), ch = nb.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+    Object.assign(sfx, { ctx, master: m, noise: nb }); ctx.resume?.();
+    const o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+    o.type = "sawtooth"; o2.type = "sine"; f.type = "lowpass"; f.frequency.value = 900; g.gain.value = 0;
+    o.connect(f); o2.connect(f); f.connect(g); g.connect(m); o.start(); o2.start();
+    sfx.charge = { o, o2, g, f };
+  } catch (e) { console.warn(e); }
+}
+function tone(f, dur, vol, type = "sine", delay = 0, f2 = null) {
+  if (!sfx.ctx || !S.sound) return;
+  const tt = sfx.ctx.currentTime + delay, o = sfx.ctx.createOscillator(), g = sfx.ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, tt); if (f2) o.frequency.exponentialRampToValueAtTime(f2, tt + dur);
+  g.gain.setValueAtTime(vol, tt); g.gain.exponentialRampToValueAtTime(0.0001, tt + dur);
+  o.connect(g); g.connect(sfx.master); o.start(tt); o.stop(tt + dur + 0.02);
+}
+function noise(dur, vol, type = "highpass", f0 = 2000, f1 = null, delay = 0) {
+  if (!sfx.ctx || !S.sound) return;
+  const tt = sfx.ctx.currentTime + delay, s = sfx.ctx.createBufferSource(), fl = sfx.ctx.createBiquadFilter(), g = sfx.ctx.createGain();
+  s.buffer = sfx.noise; fl.type = type; fl.frequency.setValueAtTime(f0, tt); if (f1) fl.frequency.exponentialRampToValueAtTime(f1, tt + dur);
+  g.gain.setValueAtTime(0.0001, tt); g.gain.exponentialRampToValueAtTime(vol, tt + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, tt + dur);
+  s.connect(fl); fl.connect(g); g.connect(sfx.master); s.start(tt, Math.random()); s.stop(tt + dur + 0.05);
+}
+const SND = {
+  tap: () => tone(1300, 0.05, 0.03, "sine"),
+  summon: () => { tone(660, 0.14, 0.05, "sine"); tone(990, 0.2, 0.04, "sine", 0.07); },
+  hide: () => tone(500, 0.18, 0.04, "sine", 0, 250),
+  portal: () => { noise(0.9, 0.2, "bandpass", 200, 3000); tone(60, 1.2, 0.25, "sine", 0, 140); },
+  portalClose: () => noise(0.5, 0.15, "bandpass", 3000, 200),
+  crackle: (v = 0.03) => noise(0.06, v, "highpass", 2500 + Math.random() * 2500),
+  blast: () => { tone(160, 0.9, 0.5, "sine", 0, 30); noise(0.8, 0.45, "lowpass", 3000, 120); tone(1200, 0.25, 0.08, "sawtooth", 0, 200); },
+  charged: () => { tone(1800, 0.12, 0.05); tone(2400, 0.15, 0.04, "sine", 0.08); },
+};
+function setChargeSound(level) {
+  if (!sfx.charge) return;
+  const c = sfx.charge, tt = sfx.ctx.currentTime;
+  c.g.gain.setTargetAtTime(S.sound ? level * 0.06 : 0, tt, 0.05);
+  c.o.frequency.setTargetAtTime(80 + level * 520, tt, 0.05); c.o2.frequency.setTargetAtTime(160 + level * 1040, tt, 0.05);
+  c.f.frequency.setTargetAtTime(400 + level * 3000, tt, 0.05);
+}
+const buzz = ms => { try { navigator.vibrate?.(ms); } catch {} };
+
+// ============================================================
+//  Fon shaderi (ODDIY / TUNGI / MATRITSA, portal, zarba to'lqini)
+// ============================================================
+let glitchKick = 0, bgR, bgScene, bgCam, bgMat, vidTex, maskTex = null, prBg = 1;
+function glyphAtlas() {
+  const chars = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄ0123456789Z:=<>+*".slice(0, 32), N = chars.length, Sz = 48;
+  const c = document.createElement("canvas"); c.width = Sz * N; c.height = Sz;
+  const g = c.getContext("2d"); g.fillStyle = "#000"; g.fillRect(0, 0, c.width, Sz);
+  g.fillStyle = "#fff"; g.font = `bold ${Sz * 0.78}px "JetBrains Mono", monospace`; g.textAlign = "center"; g.textBaseline = "middle";
+  [...chars].forEach((ch, i) => g.fillText(ch, i * Sz + Sz / 2, Sz / 2 + 2));
+  const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.NoColorSpace; tx.generateMipmaps = false; tx.minFilter = THREE.LinearFilter;
+  return [tx, N];
+}
+function initBg() {
+  bgR = new THREE.WebGLRenderer({ canvas: bgCanvas, antialias: false, powerPreference: "high-performance" });
+  bgR.outputColorSpace = THREE.LinearSRGBColorSpace;
+  vidTex = new THREE.VideoTexture(video); vidTex.colorSpace = THREE.NoColorSpace; vidTex.minFilter = THREE.LinearFilter; vidTex.generateMipmaps = false;
+  const [atlas, n] = glyphAtlas();
+  maskTex = new THREE.DataTexture(new Uint8Array(4), 2, 2, THREE.RedFormat, THREE.UnsignedByteType); maskTex.needsUpdate = true;
+  bgMat = new THREE.ShaderMaterial({
+    uniforms: { uVideo: { value: vidTex }, uGlyphs: { value: atlas }, uGlyphN: { value: n }, uMask: { value: maskTex }, uHasMask: { value: 0 },
+      uRes: { value: new THREE.Vector2(1, 1) }, uScale: { value: new THREE.Vector2(1, 1) }, uMirror: { value: 1 }, uMode: { value: 0 }, uTime: { value: 0 },
+      uGlitch: { value: 0 }, uCell: { value: 10 }, uPx: { value: 1 }, uPortal: { value: new THREE.Vector3() }, uPortalOpen: { value: 0 },
+      uWave: { value: new THREE.Vector4() }, uTint: { value: new THREE.Color("#00ff88") } },
+    vertexShader: `void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: `
+      precision highp float;
+      uniform sampler2D uVideo, uGlyphs, uMask; uniform vec2 uRes, uScale; uniform vec3 uPortal, uTint; uniform vec4 uWave;
+      uniform float uMirror, uMode, uTime, uGlitch, uCell, uGlyphN, uHasMask, uPx, uPortalOpen;
+      float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      vec2 toVid(vec2 s){ vec2 v = (s - 0.5) * uScale + 0.5; if (uMirror > 0.5) v.x = 1.0 - v.x; return v; }
+      vec3 vid(vec2 s){ return texture2D(uVideo, toVid(s)).rgb; }
+      float mask(vec2 s){ vec2 v = toVid(s); return texture2D(uMask, vec2(v.x, 1.0 - v.y)).r; }
+      float luma(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
+      vec3 shade(vec2 s, vec2 frag, float mode, float g){
+        if (mode < 0.5) {
+          vec3 c = vid(s);
+          if (g > 0.001) { c.r = vid(s + vec2(0.014 * g, 0.0)).r; c.b = vid(s - vec2(0.014 * g, 0.0)).b; }
+          return mix(c, vec3(luma(c)), 0.25) * 0.68;
+        } else if (mode < 1.5) {
+          float l = pow(luma(vid(s)), 0.85) * 1.3;
+          float n = hash(frag + fract(uTime * 7.0) * 100.0) * 0.14;
+          return uTint * max(0.0, l + n - 0.05) * (0.8 + 0.2 * sin(frag.y * 1.7));
+        }
+        vec2 cell = floor(frag / uCell), cuv = fract(frag / uCell), cs = (cell + 0.5) * uCell / uRes;
+        float l = smoothstep(0.1, 0.72, luma(vid(cs)));
+        float rows = uRes.y / uCell, r = hash(vec2(cell.x, 7.0));
+        float d = fract(fract(uTime * (0.08 + r * 0.22) + r) - (1.0 - (cell.y + 0.5) / rows));
+        float trail = exp(-d * 8.0);
+        float idx = floor(hash(cell + floor(uTime * (2.0 + r * 5.0)) * vec2(1.3, 0.7)) * uGlyphN);
+        float a = texture2D(uGlyphs, vec2((idx + cuv.x) / uGlyphN, cuv.y)).r;
+        float b;
+        if (uHasMask > 0.5) { float m = smoothstep(0.3, 0.7, mask(cs)); b = (0.22 + pow(l, 1.2) * 1.3 + trail * 0.35) * m + trail * 0.1 * (1.0 - m); }
+        else b = pow(l, 1.5) * 1.5 + trail * (0.06 + l * 0.5);
+        return uTint * a * b + vec3(0.85) * a * step(d, 0.015) * 0.4;
+      }
+      void main(){
+        vec2 frag = gl_FragCoord.xy; float g = uGlitch, ringGlow = 0.0;
+        if (uWave.w > 0.001) {
+          vec2 dv = frag - uWave.xy; float dd = length(dv) + 1e-3;
+          float ring = exp(-pow((dd - uWave.z) / (46.0 * uPx), 2.0));
+          frag -= dv / dd * ring * uWave.w * 42.0 * uPx; ringGlow = ring * uWave.w;
+        }
+        vec2 s = frag / uRes;
+        if (g > 0.001) { float band = floor(s.y * 22.0); float r = hash(vec2(band, floor(uTime * 14.0))); if (r < g * 0.7) s.x += (r - 0.35) * 0.09 * g; }
+        float mode = uMode, rim = 0.0;
+        if (uPortalOpen > 0.001) {
+          vec2 pv = gl_FragCoord.xy - uPortal.xy; float pd = length(pv), ang = atan(pv.y, pv.x);
+          float R = uPortal.z * uPortalOpen;
+          float wob = (sin(ang * 7.0 + uTime * 6.0) * 0.5 + sin(ang * 13.0 - uTime * 9.0) * 0.3) * 3.0 * uPx;
+          if (pd < R + wob) { mode = uMode > 1.5 ? 0.0 : 2.0; s += pv / max(pd, 1.0) * sin(pd * 0.05 / uPx - uTime * 3.0) * 0.002; }
+          rim = exp(-pow((pd - R - wob) / (5.0 * uPx), 2.0)) + 0.35 * exp(-pow((pd - R - wob) / (22.0 * uPx), 2.0));
+        }
+        vec3 col = shade(s, frag, mode, g);
+        col += vec3(1.0, 0.5, 0.1) * rim * uPortalOpen * 1.4;
+        col += vec3(0.6, 0.9, 1.0) * ringGlow * 0.8;
+        vec2 q = gl_FragCoord.xy / uRes - 0.5; col *= 1.0 - dot(q, q) * 0.9;
+        gl_FragColor = vec4(col, 1.0);
+      }`,
+    depthTest: false, depthWrite: false,
+  });
+  bgScene = new THREE.Scene(); bgCam = new THREE.Camera();
+  bgScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMat));
+}
+function setMask(seg) {
+  if (!maskTex.image || maskTex.image.width !== seg.w || maskTex.image.height !== seg.h) {
+    maskTex.dispose();
+    maskTex = new THREE.DataTexture(seg.data, seg.w, seg.h, THREE.RedFormat, THREE.UnsignedByteType);
+    maskTex.minFilter = maskTex.magFilter = THREE.LinearFilter; maskTex.unpackAlignment = 1;
+    bgMat.uniforms.uMask.value = maskTex;
+  } else maskTex.image.data = seg.data;
+  maskTex.needsUpdate = true; bgMat.uniforms.uHasMask.value = 1;
+}
+
+// ============================================================
+//  Effekt sahnasi
+// ============================================================
+let renderer, composer, scene, camera, pr = 1, W = innerWidth, H = innerHeight, quality = IS_MOBILE ? 0.75 : 1, hudPr = 1;
+const view = { x: 0, y: 0, w: W, h: H };
+let mirrored = true;
+const toWorld = (x, y) => [x - W / 2, H / 2 - y];
+const toFrag = (x, y) => [x * prBg, (H - y) * prBg];
+function initFx() {
+  renderer = new THREE.WebGLRenderer({ canvas: fxCanvas, antialias: false, powerPreference: "high-performance" });
+  renderer.setClearColor(0x000000, 1);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(40, W / H, 10, 10000);
+  composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.85, 0.3, 0.12));
+  composer.addPass(new OutputPass());
+}
+const lineMats = [], pointMats = [];
+function resize() {
+  W = innerWidth; H = innerHeight;
+  pr = Math.min(devicePixelRatio || 1, IS_MOBILE ? 1.5 : 1.75) * quality;
+  prBg = Math.min(devicePixelRatio || 1, 1.5) * quality;
+  hudPr = Math.min(devicePixelRatio || 1, 2);
+  hudCanvas.width = W * hudPr; hudCanvas.height = H * hudPr;
+  if (video.videoWidth) {
+    const s = Math.max(W / video.videoWidth, H / video.videoHeight);
+    view.w = video.videoWidth * s; view.h = video.videoHeight * s; view.x = (W - view.w) / 2; view.y = (H - view.h) / 2;
+  }
+  if (bgR) {
+    bgR.setPixelRatio(prBg); bgR.setSize(W, H, false);
+    const U = bgMat.uniforms; U.uRes.value.set(W * prBg, H * prBg); U.uCell.value = (IS_MOBILE ? 9 : 12) * prBg; U.uPx.value = prBg;
+    if (video.videoWidth) { const va = video.videoWidth / video.videoHeight, sa = W / H; U.uScale.value.set(sa > va ? 1 : sa / va, sa > va ? va / sa : 1); }
+  }
+  if (!renderer) return;
+  renderer.setPixelRatio(pr); renderer.setSize(W, H, false);
+  composer.setPixelRatio(pr); composer.setSize(W, H);
+  camera.aspect = W / H;
+  camera.position.set(0, 0, (H / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
+  camera.updateProjectionMatrix();
+  for (const m of lineMats) m.resolution.set(W, H);
+  for (const [m, px] of pointMats) m.size = px * pr;
+}
+addEventListener("resize", resize);
+addEventListener("orientationchange", () => setTimeout(resize, 250));
+
+function glowTexture() {
+  const c = document.createElement("canvas"); c.width = c.height = 64;
+  const g = c.getContext("2d"), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(.25, "rgba(255,255,255,.7)"); gr.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx;
+}
+let sprite;
+const additive = { transparent: true, blending: THREE.AdditiveBlending, depthWrite: false };
+function lineMat(px, extra = {}) { const m = new LineMaterial({ color: 0xffffff, linewidth: px, ...additive, ...extra }); m.resolution.set(W, H); lineMats.push(m); return m; }
+function pointMat(px, extra = {}) { const m = new THREE.PointsMaterial({ map: sprite, size: px * pr, sizeAttenuation: false, ...additive, ...extra }); pointMats.push([m, px]); return m; }
+function dynLines(segments, px) {
+  const geo = new LineSegmentsGeometry(); geo.setPositions(new Float32Array(segments * 6));
+  const mat = lineMat(px); const obj = new LineSegments2(geo, mat); obj.frustumCulled = false; scene.add(obj);
+  return { obj, mat, buf: geo.attributes.instanceStart.data, cap: segments };
+}
+function dynPoints(n, px) {
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(n * 3), 3).setUsage(THREE.DynamicDrawUsage));
+  geo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(n * 3), 3).setUsage(THREE.DynamicDrawUsage));
+  const obj = new THREE.Points(geo, pointMat(px, { vertexColors: true })); obj.frustumCulled = false; scene.add(obj);
+  return { obj, pos: geo.attributes.position, col: geo.attributes.color };
+}
+const C1 = new THREE.Color(), C2 = new THREE.Color(), C_W = new THREE.Color("#f0fffa"), C_OR = new THREE.Color(ORANGE), C_DIM = new THREE.Color(), tmpC = new THREE.Color();
+function setSeg(a, k, x1, y1, x2, y2) { a[k*6] = x1; a[k*6+1] = y1; a[k*6+2] = 0; a[k*6+3] = x2; a[k*6+4] = y2; a[k*6+5] = 0; }
+
+// ---------------- Shakllar (gologrammalar) ----------------
+function polyline(pts, closed = false, out = []) { for (let i = 0; i < pts.length - 1; i++) out.push(...pts[i], ...pts[i + 1]); if (closed) out.push(...pts[pts.length - 1], ...pts[0]); return out; }
+const ring = (n, f) => range(n, i => f(i / n * TAU));
+const segsFromGeo = g => Array.from(new THREE.EdgesGeometry(g, 8).attributes.position.array);
+const rotX = (p, a) => [p[0], p[1] * Math.cos(a) - p[2] * Math.sin(a), p[1] * Math.sin(a) + p[2] * Math.cos(a)];
+const rotZ = (p, a) => [p[0] * Math.cos(a) - p[1] * Math.sin(a), p[0] * Math.sin(a) + p[1] * Math.cos(a), p[2]];
+const T4 = range(16, i => [i & 1 ? 1 : -1, i & 2 ? 1 : -1, i & 4 ? 1 : -1, i & 8 ? 1 : -1]);
+const T4E = []; for (let i = 0; i < 16; i++) for (let b = 0; b < 4; b++) { const j = i ^ (1 << b); if (j > i) T4E.push([i, j]); }
+function tesseract(tm) {
+  const a = tm * 0.7, b = tm * 0.45, c = tm * 0.28, out = [];
+  const P = T4.map(([x, y, z, w]) => {
+    [x, w] = [x * Math.cos(a) - w * Math.sin(a), x * Math.sin(a) + w * Math.cos(a)];
+    [y, w] = [y * Math.cos(b) - w * Math.sin(b), y * Math.sin(b) + w * Math.cos(b)];
+    [z, w] = [z * Math.cos(c) - w * Math.sin(c), z * Math.sin(c) + w * Math.cos(c)];
+    const k = 1.55 / (3 - w); return [x * k, y * k, z * k];
+  });
+  for (const [i, j] of T4E) out.push(...P[i], ...P[j]);
+  return out;
+}
+const ATOM_R = [0, TAU / 3, 2 * TAU / 3].map(a => p => rotX(rotZ(p, a), 0.5));
+function atom(tm) {
+  const s = [];
+  for (const tf of ATOM_R) polyline(ring(64, a => tf([Math.cos(a), Math.sin(a) * 0.36, 0])), true, s);
+  s.push(...segsFromGeo(new THREE.IcosahedronGeometry(0.2, 0)));
+  ATOM_R.forEach((tf, i) => { const th = tm * (2.4 + i * 0.6) + i * 2, c = tf([Math.cos(th), Math.sin(th) * 0.36, 0]);
+    polyline(ring(10, a => [c[0] + Math.cos(a) * 0.06, c[1] + Math.sin(a) * 0.06, c[2]]), true, s); });
+  return s;
+}
+const ATOM_BASE = atom(0);
+const HOLOS = [
+  { build: () => { const s = [];
+    for (const lat of [-1.1, -0.6, 0, 0.6, 1.1]) { const r = Math.cos(lat), y = Math.sin(lat); polyline(ring(48, a => [Math.cos(a) * r, y, Math.sin(a) * r]), true, s); }
+    for (let m = 0; m < 8; m++) { const ph = m / 8 * Math.PI; polyline(ring(48, a => [Math.cos(a) * Math.cos(ph), Math.sin(a), Math.cos(a) * Math.sin(ph)]), true, s); }
+    polyline(ring(72, a => [Math.cos(a) * 1.35, Math.sin(a) * 0.12, Math.sin(a) * 1.35]), true, s); return s; } },
+  { dyn: tesseract },
+  { build: () => [...segsFromGeo(new THREE.IcosahedronGeometry(1, 1)), ...segsFromGeo(new THREE.DodecahedronGeometry(0.55)), ...segsFromGeo(new THREE.OctahedronGeometry(0.25))] },
+  { build: () => { const s = [], N = 80, A = [], B = [];
+    for (let i = 0; i < N; i++) { const y = -1 + 2 * i / (N - 1), th = y * TAU * 0.9; A.push([Math.cos(th) * 0.45, y, Math.sin(th) * 0.45]); B.push([-Math.cos(th) * 0.45, y, -Math.sin(th) * 0.45]); }
+    polyline(A, false, s); polyline(B, false, s); for (let i = 2; i < N; i += 5) s.push(...A[i], ...B[i]); return s; } },
+  { face: true, build: () => { const s = [];
+    for (const r of [1, 0.88, 0.62, 0.32]) polyline(ring(72, a => [Math.cos(a) * r, Math.sin(a) * r, 0]), true, s);
+    for (let i = 0; i < 10; i++) { const a = i / 10 * TAU; s.push(Math.cos(a) * 0.62, Math.sin(a) * 0.62, 0, Math.cos(a) * 0.88, Math.sin(a) * 0.88, 0); }
+    polyline(range(3, i => { const a = i / 3 * TAU + Math.PI / 2; return [Math.cos(a) * 0.55, Math.sin(a) * 0.55, 0.05]; }), true, s);
+    polyline(ring(36, a => [Math.cos(a) * 0.62, Math.sin(a) * 0.62, -0.25]), true, s);
+    for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; s.push(Math.cos(a) * 0.62, Math.sin(a) * 0.62, 0, Math.cos(a) * 0.62, Math.sin(a) * 0.62, -0.25); }
+    return s; } },
+  { dyn: atom, base: ATOM_BASE },
+];
+// kichik rasmlar (menyu uchun)
+function holoSegs(h, tm = 0.6) { let s = h.dyn ? h.dyn(tm) : h.build(); return s; }
+function holoThumb(i, size = 96) {
+  const h = HOLOS[i], s = holoSegs(h), cv = document.createElement("canvas"); cv.width = cv.height = size;
+  const g = cv.getContext("2d"), m = new THREE.Matrix4().makeRotationFromEuler(h.face ? new THREE.Euler(0, 0, 0) : new THREE.Euler(0.45, 0.6, 0)), v = new THREE.Vector3();
+  let mx = 0; for (let k = 0; k < s.length; k += 3) mx = Math.max(mx, Math.hypot(s[k], s[k+1], s[k+2]));
+  const sc = size * 0.42 / mx, [c1, c2] = PALETTES[S.color];
+  const grad = g.createLinearGradient(0, size, 0, 0); grad.addColorStop(0, c1); grad.addColorStop(1, c2);
+  g.lineCap = "round";
+  for (const [lw, al] of [[4, 0.2], [1.3, 1]]) {
+    g.globalAlpha = al; g.lineWidth = lw * size / 96; g.strokeStyle = grad; g.beginPath();
+    for (let k = 0; k < s.length; k += 6) {
+      v.set(s[k], s[k+1], s[k+2]).applyMatrix4(m); g.moveTo(size / 2 + v.x * sc, size / 2 - v.y * sc);
+      v.set(s[k+3], s[k+4], s[k+5]).applyMatrix4(m); g.lineTo(size / 2 + v.x * sc, size / 2 - v.y * sc);
+    }
+    g.stroke();
+  }
+  return cv.toDataURL();
+}
+let holoRoot, holos = [];
+function buildHolos() {
+  holoRoot = new THREE.Group(); scene.add(holoRoot);
+  holos = HOLOS.map(h => {
+    let segs = h.dyn ? h.dyn(0) : h.build();
+    let m = 0; for (let i = 0; i < segs.length; i += 3) m = Math.max(m, Math.hypot(segs[i], segs[i+1], segs[i+2]));
+    const k = 1 / m; segs = new Float32Array(segs.map(x => x * k));
+    const geo = new LineSegmentsGeometry(); geo.setPositions(segs); geo.setColors(new Float32Array(segs.length));
+    const mat = lineMat(1.8, { vertexColors: true });
+    const obj = new LineSegments2(geo, mat); obj.frustumCulled = false;
+    const g = new THREE.Group(); g.add(obj); g.visible = false; holoRoot.add(g);
+    return { ...h, k, g, mat, segs, buf: geo.attributes.instanceStart.data, cbuf: geo.attributes.instanceColorStart.data, t: 0 };
+  });
+  applyPalette();
+}
+function applyPalette() {
+  const [a, b] = PALETTES[S.color];
+  C1.set(a); C2.set(b); C_DIM.copy(C1).multiplyScalar(0.35);
+  document.documentElement.style.setProperty("--a", a); document.documentElement.style.setProperty("--a2", b);
+  if (bgMat) bgMat.uniforms.uTint.value.set(a);
+  for (const h of holos) {
+    const s = h.segs, c = h.cbuf.array;
+    for (let i = 0; i < s.length; i += 3) { tmpC.copy(C1).lerp(C2, clamp((s[i+1] + 1) / 2, 0, 1)); c[i] = tmpC.r; c[i+1] = tmpC.g; c[i+2] = tmpC.b; }
+    h.cbuf.needsUpdate = true;
+  }
+  if (faceTess) { faceTess.mat.color.copy(C_DIM); faceCont.mat.color.copy(C1); }
+}
+
+// ---------------- Dinamik obyektlar ----------------
+const HC = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+const TIPS = [4, 8, 12, 16, 20];
+const ARC_SEG = 10, ARC_MAX = 5;
+let handViz = [], faceTess, faceCont, arcOuter, arcCore, repRings, beams, sparks;
+let arcOff = new Float32Array(ARC_MAX * ARC_SEG), arcT = 0, crackT = 0;
+function buildDyn() {
+  handViz = [0, 1].map(() => ({ lines: dynLines(HC.length, 1.1), pts: dynPoints(21, 6), a: 0 }));
+  faceTess = dynLines(IS_MOBILE ? 1300 : 2600, 0.6);
+  faceCont = dynLines(220, 1.2);
+  arcOuter = dynLines(ARC_MAX * ARC_SEG, 5);
+  arcCore = dynLines(ARC_MAX * ARC_SEG, 1.4); arcCore.mat.color.copy(C_W);
+  repRings = dynLines(3 * 48, 2);
+  beams = dynLines(6, 1);
+  const n = IS_MOBILE ? 600 : 1200;
+  sparks = { n, cur: 0, P: dynPoints(n, 5), vel: new Float32Array(n * 2), life: new Float32Array(n), max: new Float32Array(n).fill(1), grav: new Float32Array(n), base: new Float32Array(n * 3) };
+  buildHolos();
+}
+function emit(x, y, vx, vy, life, color = C1, grav = 20) {
+  const P = sparks, i = P.cur; P.cur = (P.cur + 1) % P.n;
+  P.P.pos.array.set([x, y, 0], i * 3); P.vel[i*2] = vx; P.vel[i*2+1] = vy; P.life[i] = P.max[i] = life; P.grav[i] = grav;
+  P.base[i*3] = color.r; P.base[i*3+1] = color.g; P.base[i*3+2] = color.b;
+}
+function burstAt(x, y, n, sp, color = C1, life = 0.6) { for (let i = 0; i < n; i++) { const a = Math.random() * TAU, v = sp * (0.3 + Math.random()); emit(x, y, Math.cos(a) * v, Math.sin(a) * v, life * (0.6 + Math.random()), color); } }
+function updateSparks(dt) {
+  const P = sparks, p = P.P.pos.array, c = P.P.col.array, drag = Math.pow(0.2, dt);
+  for (let i = 0; i < P.n; i++) {
+    if (P.life[i] <= 0) { c[i*3] = c[i*3+1] = c[i*3+2] = 0; continue; }
+    P.life[i] -= dt; P.vel[i*2] *= drag; P.vel[i*2+1] = P.vel[i*2+1] * drag + P.grav[i] * dt;
+    p[i*3] += P.vel[i*2] * dt; p[i*3+1] += P.vel[i*2+1] * dt;
+    const a = Math.max(0, P.life[i] / P.max[i]), k = a * a;
+    for (let j = 0; j < 3; j++) c[i*3+j] = (P.base[i*3+j] + (1 - P.base[i*3+j]) * a * 0.35) * k;
+  }
+  P.P.pos.needsUpdate = true; P.P.col.needsUpdate = true;
+}
+
+// ============================================================
+//  Tahlil
+// ============================================================
+const sub = (a, b) => [a.x - b.x, a.y - b.y, a.z - b.z];
+const len = v => Math.hypot(v[0], v[1], v[2]);
+const cosAng = (a, b) => (a[0]*b[0] + a[1]*b[1] + a[2]*b[2]) / ((len(a) * len(b)) || 1);
+const dist = (a, b) => len(sub(a, b));
+const d2 = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+function fingerStates(w) {
+  const s = [];
+  s.push(cosAng(sub(w[3], w[2]), sub(w[4], w[3])) > 0.75 && dist(w[4], w[9]) > dist(w[3], w[9]) * 1.05 && dist(w[4], w[17]) > dist(w[5], w[17]) * 0.95);
+  for (const [mcp, pip, , tip] of [[5,6,7,8],[9,10,11,12],[13,14,15,16],[17,18,19,20]])
+    s.push(cosAng(sub(w[pip], w[mcp]), sub(w[tip], w[pip])) > 0.72 && dist(w[tip], w[0]) > dist(w[pip], w[0]) * 1.1);
+  return s;
+}
+const toScreen = p => ({ x: view.x + (mirrored ? 1 - p.x : p.x) * view.w, y: view.y + p.y * view.h });
+const palmOf = R => ({ x: (R[0].x + R[5].x + R[9].x + R[17].x) / 4, y: (R[0].y + R[5].y + R[9].y + R[17].y) / 4 });
+
+// ============================================================
+//  Holat
+// ============================================================
+let hands = [], lastHandSeen = 0, faceSeen = 0, faceLock = 0;
+const handF = [0, 1].map(() => range(21, () => [new OneEuro(1.6, 0.014), new OneEuro(1.6, 0.014)]));
+const faceF = range(478, () => [new OneEuro(2.0, 0.02), new OneEuro(2.0, 0.02)]);
+const holo = { hidden: false, a: 0, x: W / 2, y: H / 2, size: 0, mode: "palm", zoom: 1, zoomMin: 9, zoomMax: 0, rollRef: null,
+  fx: new OneEuro(1.2, 0.01), fy: new OneEuro(1.2, 0.01), fs: new OneEuro(1.0, 0.006), fyaw: new OneEuro(1.4, 0.02), fpitch: new OneEuro(1.4, 0.02), froll: new OneEuro(1.4, 0.02),
+  spin: 0, vSince: 0, vFired: false, fistSince: 0, openSince: 0, zoomShow: 0, broken: 0 };
+const portal = { open: 0, target: 0, x: 0, y: 0, r: 0, born: 0, path: [], cool: 0, fistSince: 0, spinDir: 1 };
+const rep = { charge: 0, charged: false, x: 0, y: 0, size: 60, lenHist: [], openSeen: 0, cool: 0 };
+const wave = { t: -1, x: 0, y: 0 };
+let banner = null, shakeAmp = 0;
+function showBanner(text, color) { banner = { text, color, t: performance.now() }; }
+let renFrames = 0, renFps = 0, statT = performance.now(), lowFpsTime = 0;
+
+function onResult(res) {
+  const now = performance.now(), ts = now / 1000;
+  if (res.seg) setMask(res.seg);
+  if (res.handsRan !== false) processHands(res, now, ts);
+  if (S.face && res.faceRan) processFace(res, now, ts);
+}
+
+function processHands(res, now, ts) {
+  const L = res.landmarks || [], WL = res.worldLandmarks || [];
+  if (!L.length) { hands = []; rep.lenHist = []; portal.path = []; return; }
+  if (!hands.length) learn("hand");
+  lastHandSeen = now;
+  const order = L.map((_, i) => i);
+  if (L.length > 1 && hands[0]) { const prev = hands[0].raw[0]; order.sort((a, b) => d2(toScreen(L[a][0]), prev) - d2(toScreen(L[b][0]), prev)); }
+  const prevHands = hands;
+  hands = order.map((i, k) => {
+    const raw = L[i].map(toScreen), F = handF[k];
+    if (!prevHands[k]) F.forEach(([a, b]) => { a.reset(); b.reset(); });
+    raw.forEach((p, j) => { F[j][0].filter(p.x, ts); F[j][1].filter(p.y, ts); });
+    const w = WL[i], st = w ? fingerStates(w) : [false, false, false, false, false];
+    return { raw, w, k, st, n: st.filter(Boolean).length, norm: L[i], lm: prevHands[k]?.lm || raw.map(p => ({ ...p })) };
+  });
+  if (hands.length === 2) learn("two");
+
+  const h = hands[0], R = h.raw, handLen = d2(R[9], R[0]) || 1, palm = palmOf(R);
+  const ux = (R[9].x - R[0].x) / handLen, uy = (R[9].y - R[0].y) / handLen;
+
+  // ---- ✊ musht → shaklni yashirish, ochiq kaft → qaytarish ----
+  if (h.n === 0 && hands.length === 1 && !rep.charged) {
+    if (!holo.fistSince) holo.fistSince = now;
+    if (!holo.hidden && now - holo.fistSince > 280) { holo.hidden = true; SND.hide(); buzz(12); learn("fist"); const [x, y] = toWorld(holo.x, holo.y); burstAt(x, y, 50, 320); }
+  } else holo.fistSince = 0;
+  if (holo.hidden && h.n >= 3) { if (!holo.openSince) holo.openSince = now; if (now - holo.openSince > 200) { holo.hidden = false; SND.summon(); } } else holo.openSince = 0;
+
+  // ---- ✌️ ushlab turish → keyingi shakl ----
+  const vSign = h.st[1] && h.st[2] && !h.st[3] && !h.st[4];
+  if (vSign && hands.length === 1) {
+    if (!holo.vSince) holo.vSince = now;
+    if (!holo.vFired && now - holo.vSince > 500) { holo.vFired = true; setShape((S.shape + 1) % HOLOS.length); }
+  } else { holo.vSince = 0; holo.vFired = false; }
+
+  // ---- 🤏 barmoq oralig'i → kattalik ----
+  if (h.w && hands.length === 1) {
+    const d = dist(h.w[4], h.w[8]);
+    if (h.st[1] && !vSign) {
+      const z = 0.45 * Math.pow(2.2 / 0.45, clamp((d - 0.025) / 0.1, 0, 1));
+      holo.zoom = z; holo.zoomMin = Math.min(holo.zoomMin, z); holo.zoomMax = Math.max(holo.zoomMax, z);
+      if (holo.zoomMax - holo.zoomMin > 0.8) learn("zoom");
+    }
+  }
+  // ---- 🔄 bilak burilishi → aylanish ----
+  const roll = Math.atan2(ux, -uy);   // 0 = barmoqlar tepaga
+  const n0 = h.norm, span = Math.hypot(n0[5].x - n0[17].x, n0[5].y - n0[17].y) || 1e-3;
+  const yawT = clamp((n0[5].z - n0[17].z) / span, -1, 1) * 1.3, pitchT = clamp((n0[0].z - n0[9].z) * 6, -0.9, 0.9);
+  if (holo.rollRef === null) holo.rollRef = roll;
+  if (Math.abs(roll - holo.rollRef) > 0.7) learn("twist");
+
+  if (hands.length >= 2) {
+    const p2 = palmOf(hands[1].raw), d = d2(palm, p2);
+    holo.mode = "dual";
+    holo.fx.filter((palm.x + p2.x) / 2, ts); holo.fy.filter((palm.y + p2.y) / 2, ts); holo.fs.filter(clamp(d * 0.33, 40, Math.min(W, H) * 0.45), ts);
+    holo.froll.filter(-Math.atan2(p2.y - palm.y, p2.x - palm.x) * (palm.x < p2.x ? 1 : 1), ts); holo.fyaw.filter(0, ts); holo.fpitch.filter(0.3, ts);
+  } else {
+    holo.mode = "palm";
+    holo.fx.filter(palm.x + ux * handLen * 1.55, ts); holo.fy.filter(palm.y + uy * handLen * 1.55, ts); holo.fs.filter(handLen * 0.72 * holo.zoom, ts);
+    holo.froll.filter(-roll, ts); holo.fyaw.filter(yawT + roll * 1.4, ts); holo.fpitch.filter(0.3 + pitchT, ts);
+  }
+
+  // ---- ☝️ portal ----
+  const pointing = h.st[1] && !h.st[2] && !h.st[3] && !h.st[4] && !h.st[0];
+  if (S.portal && pointing && hands.length === 1) {
+    portal.path.push({ x: R[8].x, y: R[8].y, t: now });
+    while (portal.path.length && now - portal.path[0].t > 2200) portal.path.shift();
+    if (now > portal.cool) checkCircle(now);
+  } else portal.path = [];
+  if (portal.target > 0 && h.n === 0) { if (!portal.fistSince) portal.fistSince = now; if (now - portal.fistSince > 300) closePortal(); }
+  else portal.fistSince = 0;
+
+  // ---- ✋ repulsor ----
+  rep.lenHist.push({ l: handLen, t: now }); while (rep.lenHist.length && now - rep.lenHist[0].t > 350) rep.lenHist.shift();
+  if (S.rep) {
+    if (h.n >= 4 && hands.length === 1) { rep.openSeen = now; rep.x = palm.x; rep.y = palm.y; rep.size = handLen; }
+    if (rep.charged && now > rep.cool) {
+      const minL = Math.min(...rep.lenHist.map(e => e.l)), pushed = handLen > minL * 1.22 && h.n >= 3, fisted = h.n <= 1 && now - rep.openSeen < 450;
+      if (pushed || fisted) fireRepulsor(pushed ? palm : { x: rep.x, y: rep.y }, now);
+    }
+  }
+}
+function checkCircle(now) {
+  const P = portal.path; if (P.length < 12) return;
+  let cx = 0, cy = 0; for (const p of P) { cx += p.x; cy += p.y; } cx /= P.length; cy /= P.length;
+  const rs = P.map(p => Math.hypot(p.x - cx, p.y - cy)), mr = rs.reduce((a, b) => a + b, 0) / rs.length;
+  if (mr < Math.min(W, H) * 0.05) return;
+  const sd = Math.sqrt(rs.reduce((a, r) => a + (r - mr) ** 2, 0) / rs.length);
+  if (sd / mr > 0.3) return;
+  let sweep = 0;
+  for (let i = 1; i < P.length; i++) { let da = Math.atan2(P[i].y - cy, P[i].x - cx) - Math.atan2(P[i-1].y - cy, P[i-1].x - cx); if (da > Math.PI) da -= TAU; if (da < -Math.PI) da += TAU; sweep += da; }
+  if (Math.abs(sweep) < TAU * 0.88) return;
+  openPortal(cx, cy, Math.max(mr * 1.15, Math.min(W, H) * 0.12), now);
+}
+function openPortal(x, y, r, now) {
+  Object.assign(portal, { x, y, r, target: 1, born: now, path: [], cool: now + 1500, spinDir: Math.random() < 0.5 ? 1 : -1 });
+  showBanner(t("bPortal"), ORANGE); SND.portal(); buzz([30, 40, 30]); learn("portal");
+}
+function closePortal() { if (portal.target === 0) return; portal.target = 0; SND.portalClose(); buzz(15); }
+function fireRepulsor(p, now) {
+  rep.charged = false; rep.charge = 0; rep.cool = now + 900;
+  Object.assign(wave, { t: now, x: p.x, y: p.y });
+  const [x, y] = toWorld(p.x, p.y); burstAt(x, y, IS_MOBILE ? 120 : 220, 900, C2, 0.8);
+  if (holo.a > 0.3) { const [hx, hy] = toWorld(holo.x, holo.y); burstAt(hx, hy, IS_MOBILE ? 120 : 220, 650, C_W, 0.9); holo.broken = now; }
+  const f = $("flash"); f.classList.remove("go"); void f.offsetWidth; f.classList.add("go");
+  shakeAmp = 16; glitchKick = 0.5; showBanner(t("bRep"), C2.getStyle()); SND.blast(); buzz([60, 30, 40]); learn("rep");
+}
+function processFace(res, now, ts) {
+  if (!res.face) return;
+  const P = res.face, n = Math.min(478, P.length / 2), fresh = now - faceSeen > 600;
+  if (fresh) faceLock = now;
+  faceSeen = now;
+  for (let i = 0; i < n; i++) { const s = toScreen({ x: P[i*2], y: P[i*2+1] }); const F = faceF[i]; if (fresh) { F[0].reset(); F[1].reset(); } F[0].filter(s.x, ts); F[1].filter(s.y, ts); }
+}
+
+// ============================================================
+//  Chizish tsikli
+// ============================================================
+const damp = (cur, tgt, rate, dt) => cur + (tgt - cur) * (1 - Math.exp(-rate * dt));
+let prevT = performance.now(), clock = 0, captureRequested = false, curTs = 0;
+const faceP = i => { const F = faceF[i]; return { x: F[0].predict(curTs), y: F[1].predict(curTs) }; };
+
+function render(now) {
+  requestAnimationFrame(render);
+  const dt = Math.min(0.05, (now - prevT) / 1000); prevT = now; clock += dt; curTs = now / 1000;
+  renFrames++;
+  if (hands.length && now - lastHandSeen > Math.max(220, procMs * 2.5) + 150) hands = [];
+  const faceVis = S.face && ready.face && now - faceSeen < Math.max(400, procMs * 3);
+  const U = bgMat.uniforms;
+
+  // ---- portal ----
+  portal.open = damp(portal.open, portal.target, portal.target ? 5 : 8, dt);
+  if (portal.target && now - portal.born > 15000) closePortal();
+  if (portal.open > 0.01) {
+    const [fx_, fy_] = toFrag(portal.x, portal.y); U.uPortal.value.set(fx_, fy_, portal.r * prBg); U.uPortalOpen.value = portal.open;
+    const Rr = portal.r * portal.open, [cx, cy] = toWorld(portal.x, portal.y), n = Math.round((IS_MOBILE ? 60 : 120) * dt * 60 * quality * portal.open);
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * TAU, ca = Math.cos(a), sa = Math.sin(a), tv = (220 + Math.random() * 260) * portal.spinDir;
+      emit(cx + ca * Rr, cy + sa * Rr, -sa * tv + ca * 40, ca * tv + sa * 40, 0.35 + Math.random() * 0.5, Math.random() < 0.3 ? C_W : C_OR, -260);
+    }
+    if (Math.random() < dt * 8) SND.crackle(0.015);
+  } else U.uPortalOpen.value = 0;
+  if (portal.path.length > 3 && hands[0]) { const tip = hands[0].lm[8], [x, y] = toWorld(tip.x, tip.y); for (let i = 0; i < 3; i++) emit(x, y, (Math.random() - .5) * 120, (Math.random() - .5) * 120, 0.5 + Math.random() * 0.4, C_OR, -200); }
+
+  // ---- repulsor zaryadi ----
+  const charging = S.rep && hands.length === 1 && hands[0].n >= 4 && now > rep.cool;
+  rep.charge = charging ? Math.min(1, rep.charge + dt / 1.1) : Math.max(0, rep.charge - dt * 1.5);
+  if (rep.charge >= 1 && !rep.charged) { rep.charged = true; SND.charged(); buzz(25); }
+  if (rep.charge < 0.3 && !charging) rep.charged = false;
+  setChargeSound(rep.charge * (charging ? 1 : 0.4));
+  repRings.obj.visible = rep.charge > 0.02 && !!hands[0];
+  if (repRings.obj.visible) {
+    const p = palmOf(hands[0].lm), [cx, cy] = toWorld(p.x, p.y), base = rep.size * 0.55, a = repRings.buf.array; let k = 0;
+    for (let ri = 0; ri < 3; ri++) {
+      const r = base * (0.35 + ri * 0.32) * (0.6 + 0.4 * rep.charge), rot = clock * (ri % 2 ? -2.2 : 3) * (1 + rep.charge), gaps = ri === 1 ? 6 : 12;
+      for (let s = 0; s < 48; s++) {
+        const on = (Math.floor(s / (48 / gaps)) % 2 === 0) || ri === 0, a1 = rot + s / 48 * TAU, a2 = rot + (s + 1) / 48 * TAU;
+        if (on) setSeg(a, k, cx + Math.cos(a1) * r, cy + Math.sin(a1) * r, cx + Math.cos(a2) * r, cy + Math.sin(a2) * r); else setSeg(a, k, 0, 0, 0, 0);
+        k++;
+      }
+    }
+    repRings.buf.needsUpdate = true; repRings.mat.color.copy(C2); repRings.mat.opacity = rep.charge * (rep.charged ? 0.8 + 0.2 * Math.sin(clock * 30) : 0.7);
+    const n = Math.round(dt * 90 * rep.charge * quality);
+    for (let i = 0; i < n; i++) { const an = Math.random() * TAU, rr = base * (1.6 + Math.random()); emit(cx + Math.cos(an) * rr, cy + Math.sin(an) * rr, -Math.cos(an) * rr * 2.6, -Math.sin(an) * rr * 2.6, 0.38, C2, 0); }
+  }
+  if (wave.t > 0) {
+    const k = (now - wave.t) / 1000, [fx_, fy_] = toFrag(wave.x, wave.y);
+    U.uWave.value.set(fx_, fy_, k * Math.max(W, H) * 1.5 * prBg, Math.max(0, 1 - k / 0.9));
+    if (k > 0.9) { wave.t = -1; U.uWave.value.w = 0; }
+  }
+  shakeAmp *= Math.pow(0.004, dt);
+  $("stage").style.transform = shakeAmp > 0.3 ? `translate(${(Math.random() - .5) * shakeAmp}px, ${(Math.random() - .5) * shakeAmp}px)` : "";
+
+  // ---- fon ----
+  glitchKick *= Math.pow(0.02, dt);
+  U.uTime.value = clock; U.uMode.value = S.vision; U.uMirror.value = mirrored ? 1 : 0; U.uGlitch.value = glitchKick;
+  bgR.render(bgScene, bgCam);
+
+  // ---- qo'l skeleti ----
+  for (const h of hands) { const F = handF[h.k]; for (let i = 0; i < 21; i++) { h.lm[i].x = F[i][0].predict(curTs); h.lm[i].y = F[i][1].predict(curTs); } }
+  handViz.forEach((v, i) => {
+    const h = hands[i];
+    v.a = damp(v.a, h ? 1 : 0, 14, dt);
+    v.lines.obj.visible = v.pts.obj.visible = v.a > 0.01;
+    if (!v.lines.obj.visible || !h) return;
+    const a = v.lines.buf.array;
+    HC.forEach(([p, q], k) => { const [x1, y1] = toWorld(h.lm[p].x, h.lm[p].y), [x2, y2] = toWorld(h.lm[q].x, h.lm[q].y); setSeg(a, k, x1, y1, x2, y2); });
+    v.lines.buf.needsUpdate = true; v.lines.mat.color.copy(C1).multiplyScalar(0.4); v.lines.mat.opacity = v.a;
+    const pp = v.pts.pos.array, pc = v.pts.col.array;
+    for (let j = 0; j < 21; j++) {
+      const [x, y] = toWorld(h.lm[j].x, h.lm[j].y); pp[j*3] = x; pp[j*3+1] = y; pp[j*3+2] = 0;
+      const ti = TIPS.indexOf(j); tmpC.copy(ti >= 0 && h.st[ti] ? C_W : C1).multiplyScalar((ti >= 0 ? 0.75 : 0.35) * v.a);
+      pc[j*3] = tmpC.r; pc[j*3+1] = tmpC.g; pc[j*3+2] = tmpC.b;
+    }
+    v.pts.pos.needsUpdate = true; v.pts.col.needsUpdate = true;
+  });
+
+  // ---- gologramma ----
+  const brokenFor = (now - holo.broken) / 1000;
+  const holoVis = hands.length > 0 && !holo.hidden && brokenFor > 1.1;
+  holo.a = damp(holo.a, holoVis ? 1 : 0, holoVis ? 9 : 10, dt);
+  if (holo.fx.x !== null) {
+    const tx = holo.fx.predict(curTs), ty = holo.fy.predict(curTs), first = holo.a < 0.03;
+    holo.x = first ? tx : damp(holo.x, tx, 50, dt); holo.y = first ? ty : damp(holo.y, ty, 50, dt);
+    const prevSize = holo.size; holo.size = first ? holo.fs.x : damp(holo.size, holo.fs.x, 16, dt);
+    if (Math.abs(holo.size - prevSize) > 0.6 && holo.mode === "palm") holo.zoomShow = now;
+  }
+  holo.spin += dt * (0.35 + rep.charge * 7);
+  const [hx, hy] = toWorld(holo.x, holo.y), cur = holos[S.shape];
+  holoRoot.position.set(hx, hy, 0);
+  const yaw = holo.fyaw.x ?? 0, pitch = holo.fpitch.x ?? 0.3, rollv = holo.froll.x ?? 0;
+  if (cur.face) holoRoot.rotation.set(pitch * 0.4, yaw * 0.5, rollv + holo.spin * 0.6, "XYZ");
+  else holoRoot.rotation.set(pitch, yaw + holo.spin, rollv * 0.5, "YXZ");
+  holos.forEach((hh, j) => {
+    const active = j === S.shape;
+    hh.t = damp(hh.t, active ? 1 : 0, 8, dt);
+    hh.g.visible = active && holo.a > 0.01;
+    if (!hh.g.visible) return;
+    if (hh.dyn) { const s = hh.dyn(clock), a = hh.buf.array; for (let i = 0; i < s.length && i < a.length; i++) a[i] = s[i] * hh.k; hh.buf.needsUpdate = true; }
+    hh.mat.opacity = holo.a * (0.88 + 0.12 * Math.sin(clock * 37) * Math.sin(clock * 13)) * Math.min(1, hh.t * 1.5);
+    hh.g.scale.setScalar(Math.max(0.001, holo.size * (0.55 + 0.45 * hh.t) * (1 + Math.sin(clock * 2) * 0.02 + rep.charge * 0.12)));
+  });
+  beams.obj.visible = holo.a > 0.02 && hands.length > 0;
+  if (beams.obj.visible) {
+    const a = beams.buf.array; let k = 0;
+    if (holo.mode === "palm") { const p = palmOf(hands[0].lm), [px, py] = toWorld(p.x, p.y); for (const ang of [-0.75, 0, 0.75]) setSeg(a, k++, px, py, hx + Math.sin(ang) * holo.size * 0.85, hy - holo.size * 0.9 * Math.cos(ang * 0.5)); }
+    else hands.slice(0, 2).forEach(hh => { const p = palmOf(hh.lm), [px, py] = toWorld(p.x, p.y); setSeg(a, k++, px, py, hx, hy); });
+    for (; k < 6; k++) setSeg(a, k, 0, 0, 0, 0);
+    beams.buf.needsUpdate = true; beams.mat.color.copy(C1); beams.mat.opacity = holo.a * (0.22 + 0.08 * Math.sin(clock * 20));
+  }
+  if (holo.a > 0.4 && Math.random() < dt * 18 * quality) { const an = Math.random() * TAU, r = holo.size; emit(hx + Math.cos(an) * r, hy + Math.sin(an) * r * 0.5, 0, 30 + Math.random() * 40, 0.8, Math.random() < 0.5 ? C1 : C2, 0); }
+
+  // ---- plazma ----
+  const arcs = [];
+  if (S.plasma && hands.length === 2) {
+    const A = hands[0].lm, B = hands[1].lm, near = clamp(1.3 - d2(palmOf(A), palmOf(B)) / (Math.max(W, H) * 0.6), 0.2, 1.2);
+    for (const ti of TIPS.slice(0, near > 0.8 ? 5 : 3)) arcs.push([A[ti], B[ti], 0.12 + near * 0.06, near]);
+  }
+  arcT -= dt; if (arcT <= 0) { arcT = 0.04 + Math.random() * 0.03; for (let i = 0; i < arcOff.length; i++) arcOff[i] = Math.random() * 2 - 1; }
+  const ao = arcOuter.buf.array, ac = arcCore.buf.array; let k = 0;
+  arcs.forEach(([p, q, amp, power], ai) => {
+    const [x1, y1] = toWorld(p.x, p.y), [x2, y2] = toWorld(q.x, q.y), dx = x2 - x1, dy = y2 - y1, Ln = Math.hypot(dx, dy) || 1, nx = -dy / Ln, ny = dx / Ln;
+    let px = x1, py = y1;
+    for (let s = 1; s <= ARC_SEG; s++) {
+      const u = s / ARC_SEG, off = s === ARC_SEG ? 0 : arcOff[ai * ARC_SEG + s] * amp * Ln * Math.sin(Math.PI * u) * 0.5;
+      const x = x1 + dx * u + nx * off, y = y1 + dy * u + ny * off; setSeg(ao, k, px, py, x, y); setSeg(ac, k, px, py, x, y); k++; px = x; py = y;
+    }
+    if (Math.random() < dt * 12 * power) emit(x1 + dx * Math.random(), y1 + dy * Math.random(), (Math.random() - .5) * 200, (Math.random() - .5) * 200, 0.3 + Math.random() * 0.3, C2, 0);
+  });
+  ao.fill(0, k * 6); ac.fill(0, k * 6); arcOuter.buf.needsUpdate = arcCore.buf.needsUpdate = true;
+  arcOuter.obj.visible = arcCore.obj.visible = k > 0;
+  const flick = 0.55 + Math.random() * 0.45; arcOuter.mat.color.copy(C2).multiplyScalar(0.5); arcOuter.mat.opacity = flick * 0.85; arcCore.mat.opacity = flick;
+  crackT -= dt; if (k > 0 && crackT <= 0) { crackT = 0.08 + Math.random() * 0.1; SND.crackle(0.02 + arcs.length * 0.004); }
+
+  // ---- yuz to'ri ----
+  faceTess.obj.visible = faceCont.obj.visible = !!(faceVis && tessConns);
+  if (faceTess.obj.visible) {
+    const Sx = range(478, i => { const p = faceP(i); return toWorld(p.x, p.y); });
+    const scanP = clamp((now - faceLock) / 1400, 0, 1), step = IS_MOBILE ? 2 : 1, ta = faceTess.buf.array; let m = 0;
+    for (let c = 0; c < tessConns.length && m < faceTess.cap; c += step) { const [a, b] = tessConns[c]; setSeg(ta, m++, Sx[a][0], Sx[a][1], Sx[b][0], Sx[b][1]); }
+    ta.fill(0, m * 6); faceTess.buf.needsUpdate = true; faceTess.mat.opacity = 0.3 + 0.7 * (1 - scanP);
+    const ca = faceCont.buf.array; m = 0;
+    for (const [a, b] of contourConns) { if (m >= faceCont.cap) break; setSeg(ca, m++, Sx[a][0], Sx[a][1], Sx[b][0], Sx[b][1]); }
+    ca.fill(0, m * 6); faceCont.buf.needsUpdate = true; faceCont.mat.opacity = 0.6;
+  }
+
+  updateSparks(dt);
+  composer.render(dt);
+  drawHud(now);
+  updateTip(now);
+  if (captureRequested) { captureRequested = false; capture(); }
+  if (rec) recordFrame(now);
+
+  if (now - statT > 500) { renFps = Math.round(renFrames * 1000 / (now - statT)); renFrames = 0; statT = now; }
+  if (renFps && renFps < 40) lowFpsTime += dt; else lowFpsTime = 0;
+  if (lowFpsTime > 2 && quality > 0.5) { quality -= 0.12; lowFpsTime = 0; resize(); }
+}
+
+// ============================================================
+//  HUD — juda kam narsa
+// ============================================================
+function txt(s, x, y, color, size = 11, align = "left", weight = 600, spacing = 0) {
+  hud.font = `${weight} ${size}px "JetBrains Mono", ui-monospace, monospace`; hud.textAlign = align; hud.fillStyle = color;
+  if ("letterSpacing" in hud) hud.letterSpacing = spacing + "px";
+  hud.fillText(s, x, y);
+  if ("letterSpacing" in hud) hud.letterSpacing = "0px";
+}
+function drawHud(now) {
+  hud.setTransform(hudPr, 0, 0, hudPr, 0, 0);
+  hud.clearRect(0, 0, W, H);
+  const small = W < 640, A = PALETTES[S.color][0];
+  txt("NEURAL LINK", 16, 28, A, 11, "left", 800, 3);
+  hud.fillStyle = rec ? "#ff3355" : A; hud.globalAlpha = 0.5 + 0.5 * Math.sin(now / 300); hud.beginPath(); hud.arc(20, 42, 3, 0, TAU); hud.fill(); hud.globalAlpha = 1;
+  if (rec) { const s = Math.floor((now - rec.start) / 1000); txt(`REC ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`, 30, 46, "#ff3355", 10.5, "left", 700); }
+  else txt(t("live"), 30, 46, "rgba(230,255,242,.55)", 10, "left", 600, 1);
+
+  // shakl nomi va kattaligi
+  if (holo.a > 0.3) {
+    const zoomVis = now - holo.zoomShow < 900;
+    txt(`${t("shapes")[S.shape]}${zoomVis ? `  ${holo.zoom.toFixed(1)}×` : ""}`, holo.x, holo.y - holo.size * 1.3, A, 10.5, "center", 700, 2);
+  }
+  if (portal.path.length > 2) {
+    hud.strokeStyle = "rgba(255,154,46,.85)"; hud.lineWidth = 2.5; hud.lineCap = "round"; hud.beginPath();
+    portal.path.forEach((p, i) => i ? hud.lineTo(p.x, p.y) : hud.moveTo(p.x, p.y)); hud.stroke();
+  }
+  if (rep.charge > 0.05 && hands[0]) { const p = palmOf(hands[0].lm); txt(rep.charged ? t("bCharged") : `${Math.round(rep.charge * 100)}%`, p.x, p.y + rep.size * 0.75, PALETTES[S.color][1], 10.5, "center", 800, 2); }
+  if (banner) {
+    const age = (now - banner.t) / 1000;
+    if (age > 1.6) banner = null;
+    else {
+      hud.globalAlpha = age < 0.15 ? age / 0.15 : clamp((1.6 - age) / 0.5, 0, 1); hud.shadowColor = banner.color; hud.shadowBlur = 22;
+      txt(banner.text, W / 2, H * 0.2, banner.color, small ? 22 : 32, "center", 800, 6 + age * 6);
+      hud.shadowBlur = 0; hud.globalAlpha = 1;
+    }
+  }
+}
+// aqlli maslahat: foydalanuvchi hali sinamagan narsani ko'rsatadi
+let tipText = "", tipSince = 0;
+function updateTip(now) {
+  let k = null;
+  if (!hands.length) k = "hand";
+  else if (!learned.zoom) k = "zoom";
+  else if (!learned.twist) k = "twist";
+  else if (!learned.two) k = "two";
+  else if (!learned.next) k = "next";
+  else if (!learned.fist) k = "fist";
+  else if (S.portal && !learned.portal) k = "portal";
+  else if (S.rep && !learned.rep) k = "rep";
+  const s = k ? t("t")[k] : "";
+  if (s !== tipText) { tipText = s; tipSince = now; $("tip").classList.remove("show"); if (s) setTimeout(() => { if (tipText === s) { $("tip").textContent = s; $("tip").classList.add("show"); } }, 350); }
+}
+
+// ============================================================
+//  Surat, video, ulashish
+// ============================================================
+function drawComposite(g, cw, ch) {
+  g.globalCompositeOperation = "source-over"; g.fillStyle = "#000"; g.fillRect(0, 0, cw, ch); g.drawImage(bgCanvas, 0, 0, cw, ch);
+  g.globalCompositeOperation = "screen"; g.drawImage(fxCanvas, 0, 0, cw, ch);
+  g.globalCompositeOperation = "source-over"; g.drawImage(hudCanvas, 0, 0, cw, ch);
+  const fs = Math.max(11, Math.round(ch * 0.022)), mark = `NEURAL LINK · ${location.host || "neural-link"}`;
+  g.font = `700 ${fs}px "JetBrains Mono", monospace`; g.textAlign = "right"; g.textBaseline = "alphabetic";
+  const tw = g.measureText(mark).width; g.fillStyle = "rgba(0,0,0,.55)"; g.fillRect(cw - tw - fs * 1.6, ch - fs * 2.6, tw + fs * 1.2, fs * 1.7);
+  g.fillStyle = PALETTES[S.color][0]; g.fillText(mark, cw - fs, ch - fs * 1.25);
+}
+function saveBlob(blob, name) {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+}
+let shareFile = null, shareTimer = 0;
+function offerShare(blob, name) {
+  try {
+    const file = new File([blob], name, { type: blob.type });
+    if (!navigator.canShare || !navigator.canShare({ files: [file] })) return;
+    shareFile = file; $("share").classList.add("show"); clearTimeout(shareTimer); shareTimer = setTimeout(() => $("share").classList.remove("show"), 10000);
+  } catch {}
+}
+$("share").onclick = async () => { $("share").classList.remove("show"); if (!shareFile) return; try { await navigator.share({ files: [shareFile], title: "Neural Link", text: `NEURAL LINK — ${location.href}` }); } catch {} };
+function capture() {
+  const c = document.createElement("canvas"); c.width = Math.round(W * hudPr); c.height = Math.round(H * hudPr);
+  drawComposite(c.getContext("2d"), c.width, c.height);
+  c.toBlob(b => { if (!b) return; const name = `neural-link-${Date.now()}.png`; saveBlob(b, name); offerShare(b, name); }, "image/png");
+  const f = $("flash"); f.classList.remove("go"); void f.offsetWidth; f.classList.add("go"); SND.tap(); buzz(10);
+}
+let rec = null;
+const REC_MAX = 60000;
+const canRecord = typeof MediaRecorder !== "undefined" && !!HTMLCanvasElement.prototype.captureStream;
+function startRec() {
+  if (!canRecord) return;
+  const k = Math.min(1.5, 1280 / Math.max(W, H));
+  const c = document.createElement("canvas"); c.width = Math.round(W * k / 2) * 2; c.height = Math.round(H * k / 2) * 2;
+  const g = c.getContext("2d"), stream = c.captureStream(30);
+  let dest = null;
+  if (sfx.ctx) { dest = sfx.ctx.createMediaStreamDestination(); sfx.master.connect(dest); dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr)); }
+  const mime = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"].find(m => MediaRecorder.isTypeSupported?.(m)) || "";
+  let mr;
+  try { mr = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 8e6 } : undefined); } catch (e) { console.warn(e); return; }
+  const chunks = [];
+  mr.ondataavailable = e => e.data && e.data.size && chunks.push(e.data);
+  mr.onstop = () => {
+    const type = mr.mimeType || mime || "video/webm", blob = new Blob(chunks, { type }), name = `neural-link-${Date.now()}.${type.includes("mp4") ? "mp4" : "webm"}`;
+    saveBlob(blob, name); offerShare(blob, name); if (dest) try { sfx.master.disconnect(dest); } catch {}
+  };
+  mr.start(500);
+  rec = { c, g, mr, start: performance.now() };
+  $("rRec").classList.add("rec"); SND.tap(); buzz(20);
+}
+function stopRec() { if (!rec) return; try { rec.mr.stop(); } catch {} rec = null; $("rRec").classList.remove("rec"); SND.tap(); buzz(20); }
+function recordFrame(now) { drawComposite(rec.g, rec.c.width, rec.c.height); if (now - rec.start > REC_MAX) stopRec(); }
+
+// ============================================================
+//  Menyu va til
+// ============================================================
+function setShape(i) {
+  S.shape = i; store.set("nl-shape", i); learn("next");
+  holos.forEach((hh, j) => { if (j !== i) hh.g.visible = false; }); if (holos[i]) holos[i].t = 0;
+  if (holo.a > 0.1) { const [x, y] = toWorld(holo.x, holo.y); burstAt(x, y, 50, 300, C2); }
+  holo.hidden = false; SND.summon(); buzz(10); renderMenu();
+}
+function setColor(i) { S.color = i; store.set("nl-color", i); applyPalette(); renderMenu(true); SND.tap(); }
+function toggle(key, sk) { S[key] = !S[key]; store.set(sk, S[key] ? "1" : "0"); SND.tap(); renderMenu();
+  if (key === "face" && S.face) loadModel("face").catch(() => { S.face = false; renderMenu(); });
+  if (key === "portal" && !S.portal) closePortal();
+  if (key === "rep" && !S.rep) { rep.charge = 0; rep.charged = false; } }
+function setVision(i) { S.vision = i; store.set("nl-vis", i); if (i === 2) loadModel("seg").catch(() => {}); glitchKick = 0.45; SND.tap(); renderMenu(); }
+let thumbCache = {};
+function renderMenu(colorChanged = false) {
+  if (colorChanged) thumbCache = {};
+  const th = i => thumbCache[i] || (thumbCache[i] = holoThumb(i));
+  $("shapeThumb").src = th(S.shape);
+  $("flyShapes").innerHTML = HOLOS.map((_, i) => `<button class="sh ${i === S.shape ? "on" : ""}" data-s="${i}"><img alt="" src="${th(i)}">${t("shapes")[i]}</button>`).join("");
+  $("rRep").classList.toggle("on", S.rep); $("rPortal").classList.toggle("on", S.portal); $("rPlasma").classList.toggle("on", S.plasma);
+  $("rFace").classList.toggle("on", S.face); $("rVision").classList.toggle("on", S.vision !== 0);
+  $("vTag").textContent = t("vis")[S.vision].slice(0, 5);
+  $("sName").textContent = S.sound ? t("on") : t("off"); $("lName").textContent = lang.toUpperCase();
+  document.querySelectorAll("[data-ti]").forEach(b => { const k = b.dataset.ti; let lbl = t(k);
+    if (k === "mRep") lbl += ` · ${S.rep ? t("on") : t("off")}`; if (k === "mPortal") lbl += ` · ${S.portal ? t("on") : t("off")}`;
+    if (k === "mPlasma") lbl += ` · ${S.plasma ? t("on") : t("off")}`; if (k === "mFace") lbl += ` · ${S.face ? t("on") : t("off")}`;
+    if (k === "mVision") lbl += ` · ${t("vis")[S.vision]}`;
+    b.dataset.tip = lbl; b.setAttribute("aria-label", lbl); });
+}
+function applyLang(fromUser = false) {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i]").forEach(el => { el.textContent = t(el.dataset.i); });
+  document.querySelectorAll(".langsw button").forEach(b => b.classList.toggle("on", b.dataset.l === lang));
+  $("tips").innerHTML = t("tips").map(([e, d]) => `<div><i>${e}</i>${d}</div>`).join("");
+  if ($("go").disabled) $("go").textContent = t("loading");
+  renderMenu(); tipText = "";
+  if (fromUser) store.set("nl-lang", lang);
+}
+function setLang(l) { if (l === lang) return; lang = l; applyLang(true); }
+function closeFlys(except) { for (const id of ["flyShapes", "flyMore"]) if (id !== except) $(id).classList.remove("open"); $("rMore").setAttribute("aria-expanded", $("flyMore").classList.contains("open")); }
+function openFly(id, anchor) {
+  const f = $(id), open = !f.classList.contains("open"); closeFlys(id);
+  if (open) { const r = $(anchor).getBoundingClientRect(); f.style.top = Math.max(10, Math.min(innerHeight - 10 - f.offsetHeight, r.top + r.height / 2 - f.offsetHeight / 2)) + "px"; }
+  f.classList.toggle("open", open); $("rMore").setAttribute("aria-expanded", $("flyMore").classList.contains("open")); SND.tap();
+}
+$("rShape").onclick = () => openFly("flyShapes", "rShape");
+$("flyShapes").onclick = e => { const b = e.target.closest(".sh"); if (b) { setShape(+b.dataset.s); closeFlys(); } };
+$("rColor").onclick = () => setColor((S.color + 1) % PALETTES.length);
+$("rRep").onclick = () => toggle("rep", "nl-rep");
+$("rPortal").onclick = () => toggle("portal", "nl-portal");
+$("rPlasma").onclick = () => toggle("plasma", "nl-plasma");
+$("rFace").onclick = () => toggle("face", "nl-face");
+$("rVision").onclick = () => setVision((S.vision + 1) % 3);
+$("rShot").onclick = () => { captureRequested = true; };
+$("rRec").onclick = () => rec ? stopRec() : startRec();
+$("rMore").onclick = () => openFly("flyMore", "rMore");
+$("mSnd").onclick = () => { S.sound = !S.sound; store.set("nl-snd", S.sound ? "1" : "0"); renderMenu(); };
+$("mLang").onclick = () => setLang(lang === "en" ? "uz" : "en");
+$("mCam").onclick = () => switchCamera();
+document.querySelectorAll(".langsw button").forEach(b => b.onclick = () => setLang(b.dataset.l));
+addEventListener("pointerdown", e => { if (!e.target.closest(".fly, #rail")) closeFlys(); });
+if (!canRecord) $("rRec").hidden = true;
+addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (!document.body.classList.contains("running")) { if (k === "enter") $("go").click(); return; }
+  const now = performance.now();
+  if (k >= "1" && k <= "6") setShape(+k - 1);
+  else if (k === "c") setColor((S.color + 1) % PALETTES.length);
+  else if (k === "v") setVision((S.vision + 1) % 3);
+  else if (k === "s") captureRequested = true;
+  else if (k === "r") rec ? stopRec() : startRec();
+  else if (k === "p") portal.target ? closePortal() : openPortal(W / 2, H * 0.45, Math.min(W, H) * 0.22, now);
+  else if (k === "b") fireRepulsor({ x: W / 2, y: H / 2 }, now);
+  else if (k === "escape") closeFlys();
+});
+
+let facing = "user";
+async function openCamera() {
+  const constraints = { audio: false, video: { facingMode: facing, width: { ideal: IS_MOBILE ? 640 : 960 }, height: { ideal: IS_MOBILE ? 480 : 540 }, frameRate: { ideal: 30, max: 30 } } };
+  const old = video.srcObject; if (old) old.getTracks().forEach(tr => tr.stop());
+  video.srcObject = await navigator.mediaDevices.getUserMedia(constraints);
+  await video.play();
+  if (!video.videoWidth) await new Promise(r => video.addEventListener("loadedmetadata", r, { once: true }));
+  mirrored = facing === "user"; resize();
+}
+async function switchCamera() {
+  facing = facing === "user" ? "environment" : "user";
+  try { await openCamera(); hands = []; bgMat.uniforms.uHasMask.value = 0; } catch (e) { facing = facing === "user" ? "environment" : "user"; await openCamera().catch(() => {}); }
+}
+async function keepAwake() { try { await navigator.wakeLock?.request("screen"); } catch {} }
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") { if (document.body.classList.contains("running")) { keepAwake(); sfx.ctx?.resume?.(); } }
+  else if (rec) stopRec();
+});
+
+applyLang();
+
+// ============================================================
+//  Ishga tushirish
+// ============================================================
+$("go").onclick = async () => {
+  const btn = $("go"), st = $("status"); btn.disabled = true; btn.textContent = t("loading"); st.classList.remove("err");
+  initAudio(); SND.tap();
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) throw Object.assign(new Error("insecure"), { name: "Insecure" });
+    st.textContent = t("sCam");
+    const camP = openCamera();
+    st.textContent = t("sModel");
+    try { worker = await startWorker(); } catch (e) { console.warn("worker:", e); worker = null; await startMainThread(); }
+    await camP;
+    initBg(); initFx(); sprite = glowTexture(); buildDyn(); applyPalette(); resize();
+    document.body.classList.add("running"); rainOn = false;
+    detectLoop(); requestAnimationFrame(render); keepAwake();
+    if (S.face) loadModel("face").catch(() => { S.face = false; renderMenu(); });
+    if (S.vision === 2) loadModel("seg").catch(() => {});
+    try { const devs = await navigator.mediaDevices.enumerateDevices(); $("mCam").hidden = devs.filter(d => d.kind === "videoinput").length < 2; } catch {}
+  } catch (e) {
+    console.error(e);
+    st.textContent = e && e.name === "NotAllowedError" ? t("denied") : e && e.name === "Insecure" ? t("insecure") : `${t("error")}: ${e.message || e}`;
+    st.classList.add("err"); btn.disabled = false; btn.textContent = t("start");
+  }
+};
+
+if ("serviceWorker" in navigator && location.protocol === "https:") addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+</script>
+</body>
+</html>
