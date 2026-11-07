@@ -321,7 +321,12 @@ self.onmessage = async (e) => {
   const d = e.data, X = self.exports;
   if (d.type === "init") {
     try {
-      importScripts(d.vision + "/vision_bundle.cjs");
+      // CDN .cjs faylini "application/node" turi bilan beradi — brauzer uni importScripts qila olmaydi.
+      // Shuning uchun matnini yuklab, to'g'ri turdagi Blob qilib ishga tushiramiz.
+      const res = await fetch(d.vision + "/vision_bundle.cjs");
+      if (!res.ok) throw new Error("vision_bundle " + res.status);
+      const blobUrl = URL.createObjectURL(new Blob([await res.text()], { type: "text/javascript" }));
+      importScripts(blobUrl); URL.revokeObjectURL(blobUrl);
       __nlFs = await X.FilesetResolver.forVisionTasks(d.vision + "/wasm");
       const [h, del] = await __nlMake(X.HandLandmarker, d.model, d.opts); __nl.hand = h;
       postMessage({ type: "ready", delegate: del });
