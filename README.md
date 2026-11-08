@@ -9,6 +9,9 @@
 |---|---|---|
 | ✋ | qo'lni ko'rsating — zarrachalar qo'lingizni qoplaydi va kechikmasdan ergashadi | show your hand — particles coat it and follow without lag |
 | 🤏 | bosh va ko'rsatkich barmoqni qising — nur shari to'planadi; qancha uzoq ushlasangiz shuncha kuchli; qo'yib yuborsangiz portlaydi | pinch — gather a ball of light; hold longer for a bigger burst; let go to explode |
+| 🚀 | nur sharini ushlab turib qo'lni tez silkiting — shar otilib ketadi va rang-barang salyut bo'lib portlaydi | hold the ball and flick — it flies and bursts into fireworks |
+| 👏 | ikki qo'l bilan qarsak — butun ekran bo'ylab kamalak zarba to'lqini | clap — a rainbow shockwave across the screen |
+| ✨ | barmoq tez harakatlansa — orqasidan nurli iz qoladi | fast fingers leave glowing light trails |
 | 👆 | kamera bo'lmasa: ekranga bosib torting, qo'yib yuboring | no camera: press and drag on the screen, then release |
 | 🫧 | O'yin → Pufaklar: kaftdan pufaklar chiqadi, barmoq bilan yoring (hisoblagich bor) | Play → Bubbles: bubbles rise from your palm, pop them (with a counter) |
 | 🫶 | yurak qiling — "SEVGI"; 🤝 ikki kishi kaftlarini yaqinlashtirsa ham yurak chiqadi | make a heart; two people bringing palms together also makes one |

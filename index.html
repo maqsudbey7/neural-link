@@ -234,12 +234,12 @@ const store = { get(k) { try { return localStorage.getItem(k); } catch { return 
 const I18N = {
   uz: {
     tagline: "Qo'lingiz minglab nurga aylanadi. Chimdib to'plang, qo'yib yuboring — portlaydi. Pufaklarni yoring, yurak yasang. Bolalar uchun ham, kattalar uchun ham tinchlantiruvchi fidget o'yinchoq.",
-    tips: [["✋", "qo'lingiz nurga aylanadi"], ["🤏", "chimdib to'plang, qo'yib yuboring"], ["🫧", "pufaklarni yoring"]],
+    tips: [["🤏", "chimdib nur to'plang"], ["🚀", "silkitib oting — salyut!"], ["👏", "qarsak — zarba to'lqini"]],
     start: "BOSHLASH", loading: "YUKLANMOQDA…", foot: "qurilmangizda ishlaydi · video hech qayerga yuborilmaydi · kamerasiz ham ekranga tegib o'ynash mumkin",
     sCam: "Kamera ochilmoqda…", sModel: "Qo'l kuzatuvi yuklanmoqda…", denied: "Kameraga ruxsat berilmadi. Brauzer sozlamalaridan kameraga ruxsat bering va sahifani yangilang.",
     insecure: "Kamera faqat https manzilda ishlaydi.", noCam: "Kamera topilmadi.", error: "Xatolik",
     placeholder: "So'z yozing: coffee, sevgi, yulduz…", snd: "Ovoz", lang: "Til", cam: "Kamerani almashtirish", share: "ULASHISH", on: "YONIQ", off: "O'CHIQ",
-    t: { hand: "✋ Qo'lingizni kameraga ko'rsating — yoki ekranga tegib torting", pinch: "🤏 Bosh va ko'rsatkich barmoqni qisib nur to'plang… keyin qo'yib yuboring!",
+    t: { hand: "✋ Qo'lingizni kameraga ko'rsating — yoki ekranga tegib torting", pinch: "🤏 Bosh va ko'rsatkich barmoqni qisib nur to'plang… keyin qo'yib yuboring!", throw: "🚀 Nur sharini ushlab turib qo'lni tez silkiting — otilib, salyut bo'lib portlaydi!", clap: "👏 Ikki qo'l bilan qarsak chaling — zarba to'lqini!",
       duo: "🤝 Ikki kishi bo'lib o'ynang: har biringiz bitta qo'l ko'rsating va kaftlarni yaqinlashtiring", play: "🫧 O'ngdagi ✋ tugmasi → Pufaklar",
       bubble: "🫧 Kaftni oching — pufaklar chiqadi · barmoq bilan tegib yoring",
       heart: "🫶 Ikki qo'l bilan (yoki 🫰 barmoq bilan) yurak qiling", word: "✍️ Pastga so'z yozing — nurlar o'shanga aylanadi", fist: "✊ Musht qiling — so'z tarqaladi",
@@ -251,12 +251,12 @@ const I18N = {
   },
   en: {
     tagline: "Your hand turns into thousands of lights. Pinch to gather, let go to burst. Pop bubbles, make a heart. A calming fidget toy for kids and grown-ups.",
-    tips: [["✋", "your hand becomes light"], ["🤏", "pinch to gather, let go"], ["🫧", "pop the bubbles"]],
+    tips: [["🤏", "pinch to gather light"], ["🚀", "flick to throw — fireworks!"], ["👏", "clap — shockwave"]],
     start: "START", loading: "LOADING…", foot: "runs on your device · video never leaves it · no camera? touch the screen to play",
     sCam: "Opening camera…", sModel: "Loading hand tracking…", denied: "Camera access was denied. Allow the camera in your browser settings and reload.",
     insecure: "The camera only works over https.", noCam: "No camera found.", error: "Error",
     placeholder: "Type a word: coffee, love, star…", snd: "Sound", lang: "Language", cam: "Switch camera", share: "SHARE", on: "ON", off: "OFF",
-    t: { hand: "✋ Show your hand to the camera — or drag on the screen", pinch: "🤏 Pinch thumb and index to gather the light… then let go!",
+    t: { hand: "✋ Show your hand to the camera — or drag on the screen", pinch: "🤏 Pinch thumb and index to gather the light… then let go!", throw: "🚀 Hold the ball and flick your hand — it flies and bursts into fireworks!", clap: "👏 Clap your hands — shockwave!",
       duo: "🤝 Play together: each person shows one hand — then bring your palms close", play: "🫧 Tap ✋ on the right → Bubbles",
       bubble: "🫧 Open your palm — bubbles float up · touch them to pop",
       heart: "🫶 Make a heart with two hands (or 🫰 with your fingers)", word: "✍️ Type a word below — the light becomes it", fist: "✊ Make a fist — the word scatters",
@@ -770,20 +770,21 @@ function onResult(res) {
       heartNow = true; const R = h.raw; heartCenter = { x: R[4].x, y: R[4].y - h.len * 1.3 }; heartSize = clamp(h.len * 1.1, 50, Math.min(W, H) * 0.28); break;
     }
   }
+  if (heartNow && now - lastClap < 1500) heartNow = false;   // qarsak paytida yurak chiqmasin
   if (heartNow) {
     if (!heartSince) heartSince = now;
-    if (now - heartSince > 180) {
+    if (now - heartSince > (hands.length === 2 ? 320 : 180)) {
       heartUntil = Date.now() + 1600;
       if (mode !== "form" || !form || form.kind !== "heart") { setMode("form", buildHeart()); if (now - lastLoveSound > 2500) { SND.love(); buzz([20, 60, 20]); lastLoveSound = now; } learn("heart"); }
     }
   } else heartSince = 0;
 
   // ---- 🤝 ikki kishi: kaftlar yaqinlashsa — o'rtada yurak ----
-  if (!heartNow && hands.length === 2 && mode === "swarm") {
+  if (!heartNow && hands.length === 2 && mode === "swarm" && now - lastClap > 1800) {
     const a0 = palmOf(hands[0].raw), a1 = palmOf(hands[1].raw), Lm = (hands[0].len + hands[1].len) / 2;
     if (Math.hypot(a0.x - a1.x, a0.y - a1.y) < Lm * 1.5) {
       if (!duoSince) duoSince = now;
-      if (now - duoSince > 450) { heartCenter = { x: (a0.x + a1.x) / 2, y: Math.min(a0.y, a1.y) - Lm * 1.4 }; heartSize = clamp(Lm * 1.2, 60, Math.min(W, H) * 0.28);
+      if (now - duoSince > 900) { heartCenter = { x: (a0.x + a1.x) / 2, y: Math.min(a0.y, a1.y) - Lm * 1.4 }; heartSize = clamp(Lm * 1.2, 60, Math.min(W, H) * 0.28);
         heartUntil = Date.now() + 2600; setMode("form", buildHeart()); if (now - lastLoveSound > 2500) { SND.love(); buzz([20, 60, 20]); lastLoveSound = now; } learn("duo"); duoSince = 0; }
     } else duoSince = 0;
   }
@@ -834,12 +835,28 @@ function render(now) {
     const was = st.on; st.on = mode === "swarm" && (st.on ? pd < 0.45 : pd < 0.3);
     const gx = (h.lm[4].x + h.lm[8].x) / 2, gy = (h.lm[4].y + h.lm[8].y) / 2;
     if (st.on && !was) { st.since = now; tone(330, 0.5, 0.02); }
-    if (st.on) { st.x = gx; st.y = gy; st.charge = Math.min(1, (now - st.since) / 1400); grabs[h.k] = { x: gx, y: gy, R: h.len * (0.16 + 0.14 * st.charge), c: st.charge }; }
-    if (!st.on && was && mode === "swarm") doBurst(st.x, st.y, h.len * 0.5, st.charge);
+    if (st.on) { if (was && dt > 0) { st.vx += ((gx - st.x) / dt - st.vx) * 0.35; st.vy += ((gy - st.y) / dt - st.vy) * 0.35; } else { st.vx = 0; st.vy = 0; }
+      st.x = gx; st.y = gy; st.charge = Math.min(1, (now - st.since) / 1400); grabs[h.k] = { x: gx, y: gy, R: h.len * (0.16 + 0.14 * st.charge), c: st.charge }; projs[h.k] = null; }
+    if (!st.on && was && mode === "swarm") release(h.k, st.x, st.y, st.vx, st.vy, h.len * 0.5, st.charge, h.len * 5);
+    trailPush(h.k, h.lm[8].x, h.lm[8].y, now);
   }
+  // 👏 qarsak: ikki kaft tez to'qnashsa — zarba to'lqini
+  if (hands.length === 2 && mode === "swarm") {
+    const a0 = palmOf(hands[0].lm), a1 = palmOf(hands[1].lm), Lm = (hands[0].len + hands[1].len) / 2, dd = Math.hypot(a0.x - a1.x, a0.y - a1.y);
+    clapHist.push([now, dd]); while (clapHist.length && now - clapHist[0][0] > 260) clapHist.shift();
+    if (dd < Lm * 1.1 && now - lastClap > 900 && clapHist[0][1] > Lm * 2.6) { lastClap = now; shockwave((a0.x + a1.x) / 2, (a0.y + a1.y) / 2); }
+  } else clapHist.length = 0;
+  // 🚀 otilgan nur sharlari
+  for (let k = 0; k < 2; k++) { const pj = projs[k]; if (!pj) continue;
+    pj.t += dt; pj.vx *= Math.exp(-0.6 * dt); pj.vy = pj.vy * Math.exp(-0.6 * dt) + 380 * dt; pj.x += pj.vx * dt; pj.y += pj.vy * dt;
+    trailPush(2 + k, pj.x, pj.y, now);
+    if (pj.t > 1.1 || pj.x < 30 || pj.x > W - 30 || pj.y < 30 || pj.y > H - 30) { projs[k] = null; doBurst(clamp(pj.x, 30, W - 30), clamp(pj.y, 30, H - 30), pj.R * 1.6, 1, true); }
+    else grabs[k] = grabs[k] || { x: pj.x, y: pj.y, R: pj.R * 0.7, c: 1 }; }
   for (let k = hands.length; k < 2; k++) pinchSt[k].on = false;
   // kamerasiz: ekranga tegib torting — nur barmoq ostida to'planadi
-  if (ptr.down && !hands.length && mode === "swarm") { const c = Math.min(1, (now - ptr.since) / 1400); grabs[0] = { x: ptr.x, y: ptr.y, R: Math.min(W, H) * (0.05 + 0.04 * c), c }; ptr.charge = c; }
+  if (ptr.down && !hands.length && mode === "swarm") { const c = Math.min(1, (now - ptr.since) / 1400); grabs[0] = { x: ptr.x, y: ptr.y, R: Math.min(W, H) * (0.05 + 0.04 * c), c }; ptr.charge = c; projs[0] = null;
+    if (dt > 0) { ptr.vx += ((ptr.x - ptr.px) / dt - ptr.vx) * 0.35; ptr.vy += ((ptr.y - ptr.py) / dt - ptr.vy) * 0.35; } ptr.px = ptr.x; ptr.py = ptr.y; }
+  if (ptr.down) trailPush(4, ptr.x, ptr.y, now);
   idle.x = W / 2 + Math.sin(clock * 0.31) * W * 0.18; idle.y = H * 0.45 + Math.sin(clock * 0.43) * H * 0.12;
 
   // shakl markazi
@@ -945,15 +962,53 @@ function render(now) {
 }
 const formCenter = { x: innerWidth / 2, y: innerHeight * 0.42 };
 const perf = { n: 0, s: 0 };
-const pinchSt = [0, 1].map(() => ({ on: false, since: 0, x: 0, y: 0, charge: 0 }));
-const ptr = { down: false, x: 0, y: 0, since: 0, charge: 0 };
+const pinchSt = [0, 1].map(() => ({ on: false, since: 0, x: 0, y: 0, vx: 0, vy: 0, charge: 0 }));
+const ptr = { down: false, x: 0, y: 0, px: 0, py: 0, vx: 0, vy: 0, since: 0, charge: 0 };
 // 💥 portlash: yaqindagi zarrachalar tashqariga otiladi
-function doBurst(x, y, R, c) {
-  const pow = 0.45 + c * 0.9, R2 = (R * 3 + 60) ** 2;
+// 🎆 portlash: yaqindagi zarrachalar rang-barang salyut bo'lib tarqaladi (ranglar sekin o'z holiga qaytadi)
+const hsl = (h, l = 0.62) => { const f = n => { const k = (n + h * 12) % 12, a = 0.9 * Math.min(l, 1 - l); return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); }; return [f(0), f(8), f(4)]; };
+function doBurst(x, y, R, c, firework = false) {
+  const pow = (0.45 + c * 0.9) * (firework ? 1.25 : 1), R2 = (R * 3 + 60) ** 2, h0 = Math.random();
+  const hues = [hsl(h0), hsl((h0 + 0.33) % 1), hsl((h0 + 0.66) % 1), [1, 1, 1]];
   for (let i = 0; i < NA; i++) { const dx = P.x[i] - x, dy = P.y[i] - y, dd = dx * dx + dy * dy; if (dd > R2) continue;
-    const a = Math.atan2(dy, dx) + (Math.random() - .5) * 0.6, v = (350 + Math.random() * 1100) * pow; P.vx[i] += Math.cos(a) * v; P.vy[i] += Math.sin(a) * v; }
-  SND.burst(c); buzz(c > 0.6 ? [15, 30, 25] : 18); learn("pinch");
-  burstFx.push({ x, y, t: 0, r: R, c });
+    const a = firework ? Math.random() * TAU : Math.atan2(dy, dx) + (Math.random() - .5) * 0.6, v = (350 + Math.random() * 1100) * pow; P.vx[i] += Math.cos(a) * v; P.vy[i] += Math.sin(a) * v;
+    if (c > 0.25 || firework) { const hc = hues[(P.seed[i] * 13 | 0) % (firework ? 4 : 3)], b = 1.5 + c; P.cr[i] = hc[0] * b; P.cg[i] = hc[1] * b; P.cb[i] = hc[2] * b; } }
+  SND.burst(c); if (firework) [523, 659, 784, 1047].forEach((f, i) => tone(f, 1.2, 0.02, 0.05 + i * 0.07)); buzz(c > 0.6 || firework ? [15, 30, 25] : 18); learn("pinch");
+  burstFx.push({ x, y, t: 0, r: R, c, col: firework ? `rgb(${hues[0].map(v => v * 255 | 0)})` : null });
+}
+// qo'yib yuborish: tez silkitilsa — shar otilib ketadi, aks holda shu yerda portlaydi
+function release(k, x, y, vx, vy, R, c, minSpeed) {
+  const sp = Math.hypot(vx, vy);
+  if (sp > minSpeed && sp > 700) { const m = Math.min(1, 2600 / sp); projs[k] = { x, y, vx: vx * m * 1.15, vy: vy * m * 1.15, t: 0, R: R * (0.6 + c * 0.6) }; tone(523, 0.4, 0.02); tone(784, 0.5, 0.015, 0.06); learn("throw"); }
+  else doBurst(x, y, R, c);
+}
+function shockwave(x, y) {
+  for (let i = 0; i < NA; i++) { const dx = P.x[i] - x, dy = P.y[i] - y, d = Math.hypot(dx, dy) + 1, v = 900 + 900 * Math.exp(-d / 300); P.vx[i] += dx / d * v; P.vy[i] += dy / d * v;
+    const hc = hsl((clock * 0.1 + d / 900) % 1); P.cr[i] = hc[0] * 1.6; P.cg[i] = hc[1] * 1.6; P.cb[i] = hc[2] * 1.6; }
+  tone(98, 0.8, 0.06); tone(196, 0.6, 0.03); [659, 880, 1175].forEach((f, i) => tone(f, 1, 0.012, 0.08 + i * 0.06)); buzz([30, 40, 30]); learn("clap");
+  burstFx.push({ x, y, t: 0, r: 80, c: 1, col: "#fff" });
+}
+const projs = [null, null], clapHist = []; let lastClap = 0;
+// ✨ barmoq izi: tez harakatda nurli chiziq qoladi
+const trails = range(5, () => []);
+function trailPush(k, x, y, now) { const tr = trails[k]; tr.push([x, y, now]); while (tr.length && now - tr[0][2] > 380) tr.shift(); }
+function drawTrails(now) {
+  if (mode !== "swarm") return;
+  const [a, b] = PALETTES[S.color];
+  hud.lineCap = "round"; hud.lineJoin = "round";
+  for (let k = 0; k < 5; k++) {
+    const tr = trails[k]; if (k < 2 && !hands.some(h => h.k === k)) tr.length = 0; if (k === 4 && !ptr.down) tr.length = 0;
+    while (tr.length && now - tr[0][2] > 380) tr.shift();
+    if (tr.length < 3) continue;
+    for (let j = 1; j < tr.length; j++) {
+      const [x0, y0] = tr[j - 1], [x1, y1, t1] = tr[j], sp = Math.hypot(x1 - x0, y1 - y0), age = (now - t1) / 380;
+      if (sp < 3 && k < 2) continue;
+      hud.globalAlpha = (1 - age) * Math.min(1, sp / 25) * (k >= 2 && k < 4 ? 0.9 : 0.7);
+      hud.strokeStyle = k >= 2 && k < 4 ? "#fff" : j % 2 ? a : b; hud.lineWidth = (1 - age) * (k >= 2 && k < 4 ? 10 : 6) + 1;
+      hud.beginPath(); hud.moveTo(x0, y0); hud.lineTo(x1, y1); hud.stroke();
+    }
+  }
+  hud.globalAlpha = 1;
 }
 const burstFx = [];
 let duoWas = false;
@@ -1014,9 +1069,10 @@ function drawHud(now) {
   hud.font = `700 13px "Manrope", system-ui, sans-serif`; hud.textAlign = "left"; hud.fillStyle = "rgba(242,245,255,.7)"; hud.fillText("Neural Link", 18, 28 + safeTop());
   if (rec) { hud.fillStyle = "#ff6b81"; hud.beginPath(); hud.arc(23, 44 + safeTop(), 3.5, 0, TAU); hud.fill();
     hud.font = `600 11px "Manrope", system-ui, sans-serif`; hud.fillText(`${Math.floor((now - rec.start) / 1000)}s`, 32, 48 + safeTop()); }
+  drawTrails(now);
   drawBubbles();
   for (let j = burstFx.length - 1; j >= 0; j--) { const b = burstFx[j]; b.t += 1 / 60; if (b.t > 0.6) { burstFx.splice(j, 1); continue; }
-    hud.globalAlpha = (1 - b.t / 0.6) * (0.35 + b.c * 0.4); hud.strokeStyle = PALETTES[S.color][1]; hud.lineWidth = 2 + b.c * 3; hud.beginPath(); hud.arc(b.x, b.y, b.r * (0.5 + b.t * 6), 0, TAU); hud.stroke(); hud.globalAlpha = 1; }
+    hud.globalAlpha = (1 - b.t / 0.6) * (0.35 + b.c * 0.4); hud.strokeStyle = b.col || PALETTES[S.color][1]; hud.lineWidth = 2 + b.c * 3; hud.beginPath(); hud.arc(b.x, b.y, b.r * (0.5 + b.t * 6), 0, TAU); hud.stroke(); hud.globalAlpha = 1; }
   if (S.act === 1 && popCount) { hud.font = `600 12px "Manrope", system-ui, sans-serif`; hud.textAlign = "left"; hud.fillStyle = "rgba(242,245,255,.55)"; hud.fillText(`🫧 ${popCount} ${t("pops")}`, 18, 48 + safeTop()); }
   if (S.skel) for (const h of hands) {
     hud.strokeStyle = "rgba(255,255,255,.16)"; hud.lineWidth = 1.2; hud.beginPath();
@@ -1036,6 +1092,8 @@ function updateTip() {
   let k = null;
   if (!hands.length) k = learned.hand || learned.pinch ? null : "hand";
   else if (!learned.pinch) k = "pinch";
+  else if (!learned.throw) k = "throw";
+  else if (!learned.clap) k = "clap";
   else if (S.act === 1 && !learned.bubble) k = "bubble";
   else if (!learned.play) k = "play";
   else if (!learned.heart) k = "heart";
@@ -1145,10 +1203,10 @@ addEventListener("pointerdown", e => { if (!e.target.closest("#more, #rMore")) t
   // ekranga tegish: pufakni yorish yoki suvga to'lqin
   if (!document.body.classList.contains("running") || e.target.closest("#rail, #more, #shapes, #acts, #bottom, #share, #err")) return;
   for (const b of bubbles) if (Math.hypot(e.clientX - b.x, e.clientY - b.y) < b.r * 1.1) { popBubble(b); return; }
-  Object.assign(ptr, { down: true, x: e.clientX, y: e.clientY, since: performance.now(), charge: 0 });
+  Object.assign(ptr, { down: true, x: e.clientX, y: e.clientY, px: e.clientX, py: e.clientY, vx: 0, vy: 0, since: performance.now(), charge: 0 });
 });
 addEventListener("pointermove", e => { if (ptr.down) { ptr.x = e.clientX; ptr.y = e.clientY; for (const b of bubbles) if (!b.dead && Math.hypot(ptr.x - b.x, ptr.y - b.y) < b.r) popBubble(b); } });
-const ptrUp = () => { if (!ptr.down) return; ptr.down = false; if (!hands.length && mode === "swarm") doBurst(ptr.x, ptr.y, Math.min(W, H) * 0.06, ptr.charge); };
+const ptrUp = () => { if (!ptr.down) return; ptr.down = false; if (!hands.length && mode === "swarm") release(0, ptr.x, ptr.y, ptr.vx, ptr.vy, Math.min(W, H) * 0.06, ptr.charge, 900); };
 addEventListener("pointerup", ptrUp); addEventListener("pointercancel", ptrUp);
 $("say").onsubmit = e => { e.preventDefault(); showWord($("word").value); $("word").blur(); };
 $("clear").onclick = () => clearWord(true);
