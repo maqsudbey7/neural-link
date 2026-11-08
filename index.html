@@ -44,6 +44,8 @@
   #cam.mirror { transform: scaleX(-1); }
   #fx, #hud { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; pointer-events: none; }
   #fx { mix-blend-mode: screen; }
+  #blackout { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .5s; }
+  body.blackbg #blackout { opacity: 1; }
   .vig { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.55) 100%); }
   #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 30; }
   #flash.go { animation: flash .4s ease-out; }
@@ -68,7 +70,15 @@
   .rsep { height: 1px; margin: 3px 8px; background: var(--border); }
   #more { position: fixed; z-index: 9; right: calc(max(10px, env(safe-area-inset-right)) + 66px); top: 50%; transform: translate(8px, -50%); padding: 6px; border-radius: 16px;
     display: flex; flex-direction: column; min-width: 170px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
-  #more.open { opacity: 1; pointer-events: auto; transform: translate(0, -50%); }
+  #more.open, #shapes.open { opacity: 1; pointer-events: auto; transform: translate(0, -50%); }
+  #shapes { position: fixed; z-index: 9; right: calc(max(10px, env(safe-area-inset-right)) + 66px); top: 50%; transform: translate(8px, -50%); padding: 6px; border-radius: 18px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 236px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+  .sh { -webkit-appearance: none; appearance: none; border: 1px solid transparent; background: transparent; cursor: pointer; padding: 10px 8px; border-radius: 12px;
+    display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--muted); text-align: left; }
+  .sh i { font-style: normal; font-size: 17px; width: 20px; text-align: center; color: var(--a); }
+  .sh:hover { background: rgba(255,255,255,.07); color: var(--fg); }
+  .sh.on { border-color: var(--a); color: var(--fg); background: rgba(255,255,255,.06); }
+  .rb .glyph { font-size: 19px; line-height: 1; color: inherit; }
   .mi { -webkit-appearance: none; appearance: none; border: 0; background: transparent; cursor: pointer; display: flex; justify-content: space-between; gap: 14px;
     padding: 10px 12px; border-radius: 10px; font-size: 12.5px; color: var(--muted); text-align: left; }
   .mi:hover { background: rgba(255,255,255,.07); color: var(--fg); }
@@ -121,7 +131,8 @@
     .tips div { font-size: 10.5px; padding: 10px 4px 8px; }
     .rb { width: 40px; height: 40px; border-radius: 12px; } .rb svg { width: 19px; height: 19px; }
     #rail { padding: 4px; gap: 2px; border-radius: 18px; top: 42%; }
-    #more { right: calc(max(10px, env(safe-area-inset-right)) + 56px); top: 42%; }
+    #more, #shapes { right: calc(max(10px, env(safe-area-inset-right)) + 56px); top: 42%; }
+    #shapes { width: 210px; } .sh { font-size: 11px; padding: 9px 6px; }
     #bottom { width: calc(100vw - 20px); }
     #tip { font-size: 12px; }
   }
@@ -132,6 +143,7 @@
 </head>
 <body>
 <video id="cam" class="mirror" playsinline webkit-playsinline muted autoplay></video>
+<div id="blackout"></div>
 <canvas id="fx"></canvas>
 <canvas id="hud"></canvas>
 <div class="vig"></div>
@@ -139,13 +151,16 @@
 <div id="err"></div>
 
 <nav id="rail" class="glass ui" aria-label="Menu">
+  <button class="rb" id="rShape"><span class="glyph" id="shapeGlyph">✦</span></button>
   <button class="rb" id="rColor"><span class="sw"></span></button>
+  <button class="rb" id="rBg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="12" cy="11" r="3"/><path d="M7 19c1-2.5 3-3.5 5-3.5s4 1 5 3.5"/></svg></button>
   <button class="rb" id="rSkel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8M12 13 7 5M12 13l5-8M12 13V3M12 13l-6 2"/><circle cx="12" cy="13" r="1.4"/></svg></button>
   <div class="rsep"></div>
   <button class="rb" id="rShot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
   <button class="rb" id="rRec"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5" fill="currentColor"/></svg></button>
   <button class="rb" id="rMore" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
 </nav>
+<div id="shapes" class="glass"></div>
 <div id="more" class="glass">
   <button class="mi" id="mSnd"><span data-i="snd"></span><b id="sName"></b></button>
   <button class="mi" id="mLang"><span data-i="lang"></span><b id="lName"></b></button>
@@ -220,8 +235,10 @@ const I18N = {
     insecure: "Kamera faqat https manzilda ishlaydi.", noCam: "Kamera topilmadi.", error: "Xatolik",
     placeholder: "So'z yozing: coffee, sevgi, yulduz…", snd: "Ovoz", lang: "Til", cam: "Kamerani almashtirish", share: "ULASHISH", on: "YONIQ", off: "O'CHIQ",
     t: { hand: "✋ Qo'lingizni kameraga ko'rsating", move: "✋ Qo'lni harakatlantiring — zarrachalar ergashadi", open: "🖐 Kaftni oching yoki musht qiling — zarrachalar tarqaladi yoki to'planadi",
-      heart: "🫶 Ikki qo'l bilan (yoki 🫰 barmoq bilan) yurak qiling", word: "✍️ Pastga so'z yozing — zarrachalar o'shanga aylanadi", fist: "✊ Musht qiling — so'z tarqaladi" },
+      heart: "🫶 Ikki qo'l bilan (yoki 🫰 barmoq bilan) yurak qiling", word: "✍️ Pastga so'z yozing — zarrachalar o'shanga aylanadi", fist: "✊ Musht qiling — so'z tarqaladi",
+      shape: "✦ O'ngdagi menyudan shakl tanlang — keyin uni qo'l bilan boshqaring", ctl: "🤏 Barmoqni yozing — kattalashadi · 🔄 bilakni buring — aylanadi · 🙌 ikki qo'l — cho'zing" },
     live: "JONLI", love: "SEVGI",
+    shapes: ["Erkin", "Shar", "Kub", "Yulduz", "DNK", "Halqa", "Galaktika"], bgCam: "Fon: kamera", bgBlack: "Fon: qora", shapeT: "Shakl", colorT: "Rang", skelT: "Qo'l skeleti", shotT: "Surat", recT: "Video",
   },
   en: {
     tagline: "Thousands of glowing particles follow your hand, become a heart when you make one, and turn into anything you type.",
@@ -231,8 +248,10 @@ const I18N = {
     insecure: "The camera only works over https.", noCam: "No camera found.", error: "Error",
     placeholder: "Type a word: coffee, love, star…", snd: "Sound", lang: "Language", cam: "Switch camera", share: "SHARE", on: "ON", off: "OFF",
     t: { hand: "✋ Show your hand to the camera", move: "✋ Move your hand — the particles follow", open: "🖐 Open your palm or make a fist — they spread or gather",
-      heart: "🫶 Make a heart with two hands (or 🫰 with your fingers)", word: "✍️ Type a word below — the particles become it", fist: "✊ Make a fist — the word scatters" },
+      heart: "🫶 Make a heart with two hands (or 🫰 with your fingers)", word: "✍️ Type a word below — the particles become it", fist: "✊ Make a fist — the word scatters",
+      shape: "✦ Pick a shape from the right menu — then control it with your hand", ctl: "🤏 Spread fingers — bigger · 🔄 twist wrist — rotate · 🙌 two hands — stretch" },
     live: "LIVE", love: "LOVE",
+    shapes: ["Free", "Sphere", "Cube", "Star", "DNA", "Ring", "Galaxy"], bgCam: "Background: camera", bgBlack: "Background: black", shapeT: "Shape", colorT: "Color", skelT: "Hand skeleton", shotT: "Photo", recT: "Video",
   },
 };
 let lang = store.get("nl-lang") || (/^en/i.test(navigator.language || "") ? "en" : "uz");
@@ -329,7 +348,9 @@ function findEmoji(text) {
 //  Sozlamalar
 // ============================================================
 const PALETTES = [["#00ff88", "#00e5ff"], ["#00c8ff", "#8a7bff"], ["#ff4dd8", "#8a5bff"], ["#ffc23a", "#ff5a1f"], ["#ff3d6e", "#ffa0d8"], ["#f2fbff", "#8fdcff"]];
-const S = { color: clamp(parseInt(store.get("nl-color") ?? "0", 10) || 0, 0, PALETTES.length - 1), skel: store.get("nl-skel") !== "0", sound: store.get("nl-snd") !== "0" };
+const S = { color: clamp(parseInt(store.get("nl-color") ?? "0", 10) || 0, 0, PALETTES.length - 1), skel: store.get("nl-skel") !== "0", sound: store.get("nl-snd") !== "0",
+  shape: clamp(parseInt(store.get("nl-pshape") ?? "0", 10) || 0, 0, 6), black: store.get("nl-black") === "1" };
+const SHAPE_GLYPH = ["✦", "●", "■", "★", "🧬", "◯", "🌀"];
 let learned = {}; try { learned = JSON.parse(store.get("nl-learned2") || "{}") || {}; } catch {}
 function learn(k) { if (learned[k]) return; learned[k] = 1; store.set("nl-learned2", JSON.stringify(learned)); }
 
@@ -473,7 +494,7 @@ const buzz = ms => { try { navigator.vibrate?.(ms); } catch {} };
 // ============================================================
 //  Zarrachalar (bitta WebGL — telefon uchun yengil)
 // ============================================================
-const N = IS_MOBILE ? 2600 : 5000;
+const N = IS_MOBILE ? 3600 : 7000;
 let renderer, scene, camera, points, geo, posAttr, colAttr, sizeAttr, W = innerWidth, H = innerHeight, pr = 1, hudPr = 1;
 const view = { x: 0, y: 0, w: W, h: H };
 let mirrored = true;
@@ -481,7 +502,7 @@ const P = {
   x: new Float32Array(N), y: new Float32Array(N), vx: new Float32Array(N), vy: new Float32Array(N),
   k: new Float32Array(N), ang: new Float32Array(N), rad: new Float32Array(N), spd: new Float32Array(N), seed: new Float32Array(N), base: new Float32Array(N),
   fx: new Float32Array(N), fy: new Float32Array(N), cr: new Float32Array(N), cg: new Float32Array(N), cb: new Float32Array(N), tr: new Float32Array(N), tg: new Float32Array(N), tb: new Float32Array(N),
-  hand: new Uint8Array(N),
+  hand: new Uint8Array(N), sx: new Float32Array(N), sy: new Float32Array(N), sz: new Float32Array(N),
 };
 function initParticles() {
   renderer = new THREE.WebGLRenderer({ canvas: fxCanvas, antialias: false, alpha: false, powerPreference: "high-performance" });
@@ -537,7 +558,45 @@ function swarmColor(i) {
 function applyPalette(instant = false) {
   PAL = [hex(PALETTES[S.color][0]), hex(PALETTES[S.color][1])];
   document.documentElement.style.setProperty("--a", PALETTES[S.color][0]); document.documentElement.style.setProperty("--a2", PALETTES[S.color][1]);
+  if (mode === "shape") genShape(S.shape);
   if (mode === "swarm") for (let i = 0; i < N; i++) { const c = swarmColor(i); P.tr[i] = c[0]; P.tg[i] = c[1]; P.tb[i] = c[2]; if (instant) { P.cr[i] = c[0]; P.cg[i] = c[1]; P.cb[i] = c[2]; } }
+}
+
+// ---------------- 3D shakllar (qo'l bilan boshqariladi) ----------------
+function genShape(id) {
+  const rnd = Math.random, star = range(10, k => { const a = k / 10 * TAU + Math.PI / 2, r = k % 2 ? 0.42 : 1; return [Math.cos(a) * r, Math.sin(a) * r]; });
+  for (let i = 0; i < N; i++) {
+    let x = 0, y = 0, z = 0; const r1 = rnd(), r2 = rnd();
+    if (id === 1) { y = 1 - 2 * (i + 0.5) / N; const r = Math.sqrt(1 - y * y), th = i * 2.39996; x = Math.cos(th) * r; z = Math.sin(th) * r; }
+    else if (id === 2) {
+      const p = [0, 0, 0];
+      if (r1 < 0.72) { const e = i % 12, ax = e >> 2; p[ax] = r2 * 2 - 1; p[(ax + 1) % 3] = e & 1 ? 1 : -1; p[(ax + 2) % 3] = e & 2 ? 1 : -1; }
+      else { const fc = i % 6, ax = fc >> 1; p[0] = rnd() * 2 - 1; p[1] = rnd() * 2 - 1; p[2] = rnd() * 2 - 1; p[ax] = fc & 1 ? 1 : -1; }
+      x = p[0] * 0.66; y = p[1] * 0.66; z = p[2] * 0.66;
+    } else if (id === 3) {
+      const k = i % 10, A = star[k], B = star[(k + 1) % 10];
+      if (r1 < 0.45) { x = A[0] + (B[0] - A[0]) * r2; y = A[1] + (B[1] - A[1]) * r2; z = (i & 1 ? 0.14 : -0.14); }
+      else { let a = rnd(), b = rnd(); if (a + b > 1) { a = 1 - a; b = 1 - b; } x = A[0] * a + B[0] * b; y = A[1] * a + B[1] * b; z = (rnd() - 0.5) * 0.28 * (1 - a - b + 0.3); }
+    } else if (id === 4) {
+      if (r1 < 0.78) { const sgn = i & 1, t = r2 * 2 - 1, th = t * TAU * 1.1 + sgn * Math.PI; x = Math.cos(th) * 0.42; y = t; z = Math.sin(th) * 0.42; }
+      else { const t = Math.round((r2 * 2 - 1) * 9) / 9, th = t * TAU * 1.1, u = rnd() * 2 - 1; x = Math.cos(th) * 0.42 * u; y = t; z = Math.sin(th) * 0.42 * u; }
+    } else if (id === 5) { const u = r1 * TAU, v = r2 * TAU, Rr = 0.68, rr = 0.27; x = (Rr + rr * Math.cos(v)) * Math.cos(u); y = rr * Math.sin(v); z = (Rr + rr * Math.cos(v)) * Math.sin(u); }
+    else if (id === 6) {
+      if (r1 < 0.15) { const g = () => (rnd() + rnd() + rnd() - 1.5) * 0.12; x = g(); y = g() * 0.6; z = g(); }
+      else { const arm = i % 3, tt = Math.pow(r2, 0.75), ang = tt * TAU * 1.3 + arm * TAU / 3 + (rnd() - 0.5) * 0.5 * (1 - tt * 0.6); x = Math.cos(ang) * tt; z = Math.sin(ang) * tt; y = (rnd() - 0.5) * 0.08 * (1.2 - tt); }
+    }
+    P.sx[i] = x; P.sy[i] = y; P.sz[i] = z;
+    const u = clamp((y + 1) / 2, 0, 1), a = PAL[0], b = PAL[1], br = 0.7 + 0.3 * ((P.seed[i] * 3.7) % 1);
+    P.tr[i] = (a[0] + (b[0] - a[0]) * u) * br; P.tg[i] = (a[1] + (b[1] - a[1]) * u) * br; P.tb[i] = (a[2] + (b[2] - a[2]) * u) * br;
+  }
+}
+const shp = { cx: innerWidth / 2, cy: innerHeight * 0.45, scale: 160, yaw: 0, pitch: 0.35, roll: 0, zoom: 1, tcx: innerWidth / 2, tcy: innerHeight * 0.45, tscale: 160,
+  tyaw: 0, tpitch: 0.35, troll: 0, spin: 0, zMin: 9, zMax: 0 };
+function baseMode() { return wordForm ? ["form", wordForm] : S.shape > 0 ? ["shape", null] : ["swarm", null]; }
+function setShape(i) {
+  S.shape = i; store.set("nl-pshape", i); if (i > 0) learn("shape");
+  if (!(mode === "form" && form)) { const [m, f] = baseMode(); setMode(m, f, true); }
+  renderUi(); SND.tap(); buzz(10);
 }
 
 // ---------------- Shakl nishonlari (so'z, emoji, yurak) ----------------
@@ -595,10 +654,10 @@ function assign(f) {
     P.tr[i] = p[2]; P.tg[i] = p[3]; P.tb[i] = p[4];
   }
 }
-function setMode(m, f = null) {
-  if (m === mode && f === form) return;
+function setMode(m, f = null, force = false) {
+  if (!force && m === mode && f === form) return;
   mode = m; form = f;
-  if (f) assign(f); else applyPalette();
+  if (f) assign(f); else if (m === "shape") genShape(S.shape); else applyPalette();
   for (let i = 0; i < N; i++) { const a = Math.random() * TAU, v = 120 + Math.random() * 380; P.vx[i] += Math.cos(a) * v; P.vy[i] += Math.sin(a) * v; }
 }
 function showWord(text) {
@@ -612,7 +671,7 @@ function showWord(text) {
 function clearWord(scatter = true) {
   if (!wordForm) return;
   wordForm = null; $("clear").hidden = true; $("word").value = "";
-  if (mode === "form" && form && form.kind === "word") { setMode("swarm"); if (scatter) { SND.scatter(); buzz(20); } }
+  if (mode === "form" && form && form.kind === "word") { const [m, f] = baseMode(); setMode(m, f); if (scatter) { SND.scatter(); buzz(20); } }
 }
 
 // ============================================================
@@ -679,6 +738,23 @@ function onResult(res) {
     }
   } else heartSince = 0;
 
+  // ---- ✦ shaklni qo'l bilan boshqarish ----
+  {
+    const h0 = hands[0], R = h0.raw, pm = palmOf(R), ux = (R[9].x - R[0].x) / h0.len, uy = (R[9].y - R[0].y) / h0.len;
+    if (hands.length >= 2) {
+      const p2 = palmOf(hands[1].raw), dd = d2(pm, p2);
+      shp.tcx = (pm.x + p2.x) / 2; shp.tcy = (pm.y + p2.y) / 2; shp.tscale = clamp(dd * 0.42, 50, Math.min(W, H) * 0.48);
+      shp.troll = Math.atan2(p2.y - pm.y, p2.x - pm.x) * (pm.x < p2.x ? 1 : -1) * 0.8;
+    } else {
+      if (h0.w && h0.st[1] && h0.n > 0) { const d = dist(h0.w[4], h0.w[8]); shp.zoom = 0.5 * Math.pow(2.5 / 0.5, clamp((d - 0.025) / 0.1, 0, 1)); }
+      if (h0.n === 0) shp.zoom = 0.42;   // musht — siqiladi
+      shp.zMin = Math.min(shp.zMin, shp.zoom); shp.zMax = Math.max(shp.zMax, shp.zoom); if (mode === "shape" && shp.zMax - shp.zMin > 0.9) learn("ctl");
+      shp.tcx = pm.x + ux * h0.len * 1.0; shp.tcy = pm.y + uy * h0.len * 1.0; shp.tscale = h0.len * 1.05 * shp.zoom;
+      const roll = Math.atan2(ux, -uy); shp.tyaw = roll * 1.8; shp.troll = -roll * 0.5;
+      const n0 = L[order[0]]; shp.tpitch = 0.35 + clamp((n0[0].z - n0[9].z) * 6, -0.8, 0.8);
+    }
+  }
+
   // ---- ✊ musht → so'zni tarqatish ----
   const h = hands[0];
   if (h.n === 0 && hands.length === 1 && wordForm && mode === "form" && form.kind === "word") {
@@ -699,7 +775,7 @@ function render(now) {
   for (const h of hands) { const F = handF[h.k]; for (let i = 0; i < 21; i++) { h.lm[i].x = F[i][0].predict(curTs); h.lm[i].y = F[i][1].predict(curTs); } }
 
   // yurak tugagach — so'z yoki ergashishga qaytish
-  if (mode === "form" && form && form.kind === "heart" && Date.now() > heartUntil) setMode(wordForm ? "form" : "swarm", wordForm);
+  if (mode === "form" && form && form.kind === "heart" && Date.now() > heartUntil) { const [m, f] = baseMode(); setMode(m, f); }
 
   // langarlar: har bir qo'lning ko'rsatkich barmog'i uchi
   const anchors = hands.map(h => ({ x: h.lm[8].x * 0.6 + palmOf(h.lm).x * 0.4, y: h.lm[8].y * 0.6 + palmOf(h.lm).y * 0.4, R: h.len * (0.35 + 1.25 * (openF[h.k].x ?? 0.6)) }));
@@ -729,11 +805,29 @@ function render(now) {
     formCenter.x += (cx - formCenter.x) * (1 - Math.exp(-8 * dt)); formCenter.y += (cy - formCenter.y) * (1 - Math.exp(-8 * dt));
   }
 
+  // shakl holati (silliq)
+  if (mode === "shape") {
+    const noHand = !hands.length, e = 1 - Math.exp(-10 * dt);
+    if (noHand) { shp.tcx = W / 2; shp.tcy = H * 0.45; shp.tscale = Math.min(W, H) * 0.24; shp.tyaw = 0; shp.troll = 0; shp.tpitch = 0.35; }
+    shp.cx += (shp.tcx - shp.cx) * e; shp.cy += (shp.tcy - shp.cy) * e; shp.scale += (shp.tscale - shp.scale) * (1 - Math.exp(-7 * dt));
+    shp.yaw += (shp.tyaw - shp.yaw) * e; shp.pitch += (shp.tpitch - shp.pitch) * e; shp.roll += (shp.troll - shp.roll) * e;
+    shp.spin += dt * (S.shape === 6 ? 0.35 : 0.5);
+  }
+  const Y = shp.yaw + shp.spin, cyw = Math.cos(Y), syw = Math.sin(Y), cpt = Math.cos(shp.pitch), spt = Math.sin(shp.pitch), crl = Math.cos(shp.roll), srl = Math.sin(shp.roll);
+
   // fizika
-  const pa = posAttr.array, ca = colAttr.array, sa = sizeAttr.array, cAlpha = 1 - Math.exp(-4 * dt), sizeBase = IS_MOBILE ? 3.2 : 3.6;
+  const pa = posAttr.array, ca = colAttr.array, sa = sizeAttr.array, cAlpha = 1 - Math.exp(-4 * dt), sizeBase = IS_MOBILE ? 3.9 : 4.5;
   for (let i = 0; i < N; i++) {
     let tx, ty, k, damp;
-    if (mode === "form" && form) {
+    let depth = 1;
+    if (mode === "shape") {
+      const x0 = P.sx[i], y0 = P.sy[i], z0 = P.sz[i];
+      const x1 = x0 * cyw + z0 * syw, z1 = -x0 * syw + z0 * cyw;
+      const y2 = y0 * cpt - z1 * spt, z2 = y0 * spt + z1 * cpt;
+      const x3 = x1 * crl - y2 * srl, y3 = x1 * srl + y2 * crl, f = 1.8 / (1.8 - z2 * 0.6);
+      tx = shp.cx + x3 * shp.scale * f; ty = shp.cy - y3 * shp.scale * f; depth = 0.45 + 0.55 * clamp((z2 + 1) / 2, 0, 1);
+      k = 30 + P.k[i]; damp = 9;
+    } else if (mode === "form" && form) {
       const j = Math.sin(clock * 3 + P.seed[i]) * 0.8;
       tx = formCenter.x + P.fx[i] * sc * beat + j; ty = formCenter.y + P.fy[i] * sc * beat + Math.cos(clock * 2.6 + P.seed[i]) * 0.8;
       k = 26 + P.k[i]; damp = 9;
@@ -749,8 +843,8 @@ function render(now) {
     const sp = Math.min(1, Math.hypot(P.vx[i], P.vy[i]) / 900);
     pa[i*3] = P.x[i]; pa[i*3+1] = P.y[i];
     const tw = mode === "form" ? 0.85 + 0.15 * Math.sin(clock * 5 + P.seed[i]) : 0.75 + 0.25 * Math.sin(clock * 3 + P.seed[i]);
-    ca[i*3] = P.cr[i] * tw + sp * 0.3; ca[i*3+1] = P.cg[i] * tw + sp * 0.3; ca[i*3+2] = P.cb[i] * tw + sp * 0.3;
-    sa[i] = (mode === "form" ? sizeBase * 0.95 : sizeBase * (0.6 + P.base[i] * 0.9)) * (form && form.kind === "heart" ? beat : 1);
+    ca[i*3] = (P.cr[i] * tw + sp * 0.3) * depth; ca[i*3+1] = (P.cg[i] * tw + sp * 0.3) * depth; ca[i*3+2] = (P.cb[i] * tw + sp * 0.3) * depth;
+    sa[i] = (mode === "form" ? sizeBase * 0.95 : mode === "shape" ? sizeBase * (0.7 + 0.5 * depth) : sizeBase * (0.6 + P.base[i] * 0.9)) * (form && form.kind === "heart" ? beat : 1);
   }
   posAttr.needsUpdate = true; colAttr.needsUpdate = true; sizeAttr.needsUpdate = true;
   renderer.render(scene, camera);
@@ -791,6 +885,8 @@ function updateTip() {
   else if (!learned.open) k = "open";
   else if (!learned.heart) k = "heart";
   else if (!learned.word) k = "word";
+  else if (!learned.shape) k = "shape";
+  else if (mode === "shape" && !learned.ctl) k = "ctl";
   else if (wordForm && !learned.fist) k = "fist";
   const s = k ? t("t")[k] : "";
   if (s === tipText) return;
@@ -806,7 +902,7 @@ function drawComposite(g, cw, ch) {
   g.save(); g.fillStyle = "#000"; g.fillRect(0, 0, cw, ch);
   g.filter = "brightness(.62) saturate(.9)";
   if (mirrored) { g.translate(cw, 0); g.scale(-1, 1); }
-  g.drawImage(video, view.x * k, view.y * k, view.w * k, view.h * k); g.restore();
+  if (!S.black) g.drawImage(video, view.x * k, view.y * k, view.w * k, view.h * k); g.restore();
   g.globalCompositeOperation = "screen"; g.drawImage(fxCanvas, 0, 0, cw, ch);
   g.globalCompositeOperation = "source-over"; g.drawImage(hudCanvas, 0, 0, cw, ch);
   const fs = Math.max(11, Math.round(ch * 0.022)), mark = `NEURAL LINK · ${location.host || "neural-link"}`;
@@ -855,11 +951,20 @@ function renderUi() {
   $("word").placeholder = t("placeholder");
   if ($("go").disabled) $("go").textContent = t("loading");
   $("rSkel").classList.toggle("on", S.skel);
+  document.body.classList.toggle("blackbg", S.black); $("rBg").classList.toggle("on", S.black);
+  $("shapeGlyph").textContent = SHAPE_GLYPH[S.shape]; $("rShape").classList.toggle("on", S.shape > 0);
+  $("shapes").innerHTML = t("shapes").map((n, i) => `<button class="sh ${i === S.shape ? "on" : ""}" data-s="${i}"><i>${SHAPE_GLYPH[i]}</i>${n}</button>`).join("");
+  const tips = { rShape: t("shapeT") + ": " + t("shapes")[S.shape], rColor: t("colorT"), rBg: S.black ? t("bgBlack") : t("bgCam"), rSkel: t("skelT"), rShot: t("shotT"), rRec: t("recT") };
+  for (const [id, lbl] of Object.entries(tips)) { $(id).title = lbl; $(id).setAttribute("aria-label", lbl); }
   $("sName").textContent = S.sound ? t("on") : t("off"); $("lName").textContent = lang.toUpperCase();
   tipText = null;
 }
 function setLang(l) { lang = l; store.set("nl-lang", l); renderUi(); }
-const toggleMore = force => { const o = force ?? !$("more").classList.contains("open"); $("more").classList.toggle("open", o); $("rMore").setAttribute("aria-expanded", o); };
+const toggleMore = force => { const o = force ?? !$("more").classList.contains("open"); $("more").classList.toggle("open", o); $("rMore").setAttribute("aria-expanded", o); if (o) $("shapes").classList.remove("open"); };
+const toggleShapes = force => { const o = force ?? !$("shapes").classList.contains("open"); $("shapes").classList.toggle("open", o); if (o) toggleMore(false); };
+$("rShape").onclick = () => { toggleShapes(); SND.tap(); };
+$("shapes").onclick = e => { const b = e.target.closest(".sh"); if (b) { setShape(+b.dataset.s); toggleShapes(false); } };
+$("rBg").onclick = () => { S.black = !S.black; store.set("nl-black", S.black ? "1" : "0"); renderUi(); SND.tap(); };
 $("rColor").onclick = () => { S.color = (S.color + 1) % PALETTES.length; store.set("nl-color", S.color); applyPalette(); if (wordForm && mode === "form" && form.kind === "word") { wordForm = buildWord(wordForm.label); setMode("form", wordForm); } SND.tap(); };
 $("rSkel").onclick = () => { S.skel = !S.skel; store.set("nl-skel", S.skel ? "1" : "0"); renderUi(); SND.tap(); };
 $("rShot").onclick = () => { captureRequested = true; };
@@ -869,7 +974,7 @@ $("mSnd").onclick = () => { S.sound = !S.sound; store.set("nl-snd", S.sound ? "1
 $("mLang").onclick = () => setLang(lang === "en" ? "uz" : "en");
 $("mCam").onclick = () => switchCamera();
 document.querySelectorAll(".langsw button").forEach(b => b.onclick = () => setLang(b.dataset.l));
-addEventListener("pointerdown", e => { if (!e.target.closest("#more, #rMore")) toggleMore(false); });
+addEventListener("pointerdown", e => { if (!e.target.closest("#more, #rMore")) toggleMore(false); if (!e.target.closest("#shapes, #rShape")) toggleShapes(false); });
 $("say").onsubmit = e => { e.preventDefault(); showWord($("word").value); $("word").blur(); };
 $("clear").onclick = () => clearWord(true);
 if (!canRecord) $("rRec").hidden = true;
@@ -908,6 +1013,7 @@ $("go").onclick = async () => {
     st.textContent = t("sModel");
     try { worker = await startWorker(); } catch (e) { console.warn("worker:", e); worker = null; await startMainThread(); }
     initParticles(); resize();
+    { const [m, f] = baseMode(); if (m !== "swarm") setMode(m, f, true); }
     { const probe = document.createElement("div"); probe.style.cssText = "position:fixed;top:0;padding-top:env(safe-area-inset-top);visibility:hidden";
       document.body.appendChild(probe); safeTopPx = parseFloat(getComputedStyle(probe).paddingTop) || 0; probe.remove(); }
     document.body.classList.add("running"); rainOn = false;
