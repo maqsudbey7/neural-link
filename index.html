@@ -70,7 +70,10 @@
   .rsep { height: 1px; margin: 3px 8px; background: var(--border); }
   #more { position: fixed; z-index: 9; right: calc(max(10px, env(safe-area-inset-right)) + 66px); top: 50%; transform: translate(8px, -50%); padding: 6px; border-radius: 16px;
     display: flex; flex-direction: column; min-width: 170px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
-  #more.open, #shapes.open { opacity: 1; pointer-events: auto; transform: translate(0, -50%); }
+  #more.open, #shapes.open, #acts.open { opacity: 1; pointer-events: auto; transform: translate(0, -50%); }
+  #acts { position: fixed; z-index: 9; right: calc(max(10px, env(safe-area-inset-right)) + 66px); top: 50%; transform: translate(8px, -50%); padding: 6px; border-radius: 18px;
+    display: flex; flex-direction: column; gap: 4px; width: 200px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+  #acts .sh small { display: block; font-weight: 500; font-size: 10.5px; color: var(--faint); margin-top: 2px; }
   #shapes { position: fixed; z-index: 9; right: calc(max(10px, env(safe-area-inset-right)) + 66px); top: 50%; transform: translate(8px, -50%); padding: 6px; border-radius: 18px;
     display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 236px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
   .sh { -webkit-appearance: none; appearance: none; border: 1px solid transparent; background: transparent; cursor: pointer; padding: 10px 8px; border-radius: 12px;
@@ -139,7 +142,7 @@
     .tips div { font-size: 10.5px; padding: 10px 4px 8px; }
     .rb { width: 40px; height: 40px; border-radius: 12px; } .rb svg { width: 19px; height: 19px; }
     #rail { padding: 4px; gap: 2px; border-radius: 18px; top: 42%; }
-    #more, #shapes { right: calc(max(10px, env(safe-area-inset-right)) + 56px); top: 42%; }
+    #more, #shapes, #acts { right: calc(max(10px, env(safe-area-inset-right)) + 56px); top: 42%; }
     #shapes { width: 210px; } .sh { font-size: 11px; padding: 9px 6px; }
     #bottom { width: calc(100vw - 20px); }
     #tip { font-size: 12px; }
@@ -161,19 +164,22 @@
 
 <nav id="rail" class="glass ui" aria-label="Menu">
   <button class="rb" id="rBreath"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.5" opacity=".55"/><circle cx="12" cy="12" r="10.5" opacity=".25"/></svg></button>
+  <button class="rb" id="rPlay"><span class="glyph" id="actGlyph">✋</span></button>
   <button class="rb" id="rShape"><span class="glyph" id="shapeGlyph">✦</span></button>
   <button class="rb" id="rColor"><span class="sw"></span></button>
   <button class="rb" id="rBg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="12" cy="11" r="3"/><path d="M7 19c1-2.5 3-3.5 5-3.5s4 1 5 3.5"/></svg></button>
-  <button class="rb" id="rSkel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8M12 13 7 5M12 13l5-8M12 13V3M12 13l-6 2"/><circle cx="12" cy="13" r="1.4"/></svg></button>
   <div class="rsep"></div>
   <button class="rb" id="rShot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
   <button class="rb" id="rRec"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5" fill="currentColor"/></svg></button>
   <button class="rb" id="rMore" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
 </nav>
+<div id="acts" class="glass"></div>
 <div id="shapes" class="glass"></div>
 <div id="more" class="glass">
   <button class="mi" id="mSnd"><span data-i="snd"></span><b id="sName"></b></button>
   <button class="mi" id="mLang"><span data-i="lang"></span><b id="lName"></b></button>
+  <button class="mi" id="mSkel"><span data-i="skelT"></span><b id="skName"></b></button>
+  <button class="mi" id="mLite"><span data-i="liteT"></span><b id="liName"></b></button>
   <button class="mi" id="mCam" hidden><span data-i="cam"></span><b>⇄</b></button>
 </div>
 
@@ -240,11 +246,13 @@ const I18N = {
     sCam: "Kamera ochilmoqda…", sModel: "Qo'l kuzatuvi yuklanmoqda…", denied: "Kameraga ruxsat berilmadi. Brauzer sozlamalaridan kameraga ruxsat bering va sahifani yangilang.",
     insecure: "Kamera faqat https manzilda ishlaydi.", noCam: "Kamera topilmadi.", error: "Xatolik",
     placeholder: "So'z yozing: coffee, sevgi, yulduz…", snd: "Ovoz", lang: "Til", cam: "Kamerani almashtirish", share: "ULASHISH", on: "YONIQ", off: "O'CHIQ",
-    t: { hand: "✋ Qo'lingizni kameraga ko'rsating", move: "✋ Qo'lni sekin harakatlantiring — nurlar ergashadi", open: "🖐 Kaftni oching yoki musht qiling — nurlar yoyiladi yoki to'planadi", breath: "🌬️ O'ngdagi ◎ tugmasi — nafas mashqi",
+    t: { hand: "✋ Qo'lingizni kameraga ko'rsating", move: "✋ Qo'lni sekin harakatlantiring — nurlar ergashadi", open: "🖐 Kaftni oching yoki musht qiling — nurlar yoyiladi yoki to'planadi", breath: "🌬️ O'ngdagi ◎ tugmasi — nafas mashqi", duo: "🤝 Ikki kishi bo'lib o'ynang: har biringiz bitta qo'l ko'rsating va qo'llarni yaqinlashtiring",
+      bubble: "🫧 Kaftni oching — pufaklar chiqadi · barmoq bilan tegib yoring", water: "🌊 Qo'lni suv ustidan sekin o'tkazing — to'lqinlar tarqaladi",
       heart: "🫶 Ikki qo'l bilan (yoki 🫰 barmoq bilan) yurak qiling", word: "✍️ Pastga so'z yozing — zarrachalar o'shanga aylanadi", fist: "✊ Musht qiling — so'z tarqaladi",
       shape: "✦ O'ngdagi menyudan shakl tanlang — keyin uni qo'l bilan boshqaring", ctl: "🤏 Barmoqni yozing — kattalashadi · 🔄 bilakni buring — aylanadi · 🙌 ikki qo'l — cho'zing" },
     live: "JONLI", love: "SEVGI",
-    shapes: ["Erkin", "Shar", "Kub", "Yulduz", "DNK", "Halqa", "Galaktika"], bgCam: "Fon: kamera", bgBlack: "Fon: tungi osmon", breathT: "Nafas mashqi",
+    shapes: ["Erkin", "Shar", "Kub", "Yulduz", "DNK", "Halqa", "Galaktika"], bgCam: "Fon: kamera", bgBlack: "Fon: tungi osmon", breathT: "Nafas mashqi", playT: "O'yin", liteT: "Yengil rejim",
+    acts: [["✋", "Erkin", "nurlar qo'lga ergashadi"], ["🫧", "Pufaklar", "kaftni oching, barmoq bilan yoring"], ["🌊", "Ko'l", "suv ustidan qo'lni o'tkazing"]],
     bIn: "Nafas oling", bHold: "Ushlab turing", bOut: "Sekin chiqaring", bRest: "Dam oling", shapeT: "Shakl", colorT: "Rang", skelT: "Qo'l skeleti", shotT: "Surat", recT: "Video",
   },
   en: {
@@ -254,11 +262,13 @@ const I18N = {
     sCam: "Opening camera…", sModel: "Loading hand tracking…", denied: "Camera access was denied. Allow the camera in your browser settings and reload.",
     insecure: "The camera only works over https.", noCam: "No camera found.", error: "Error",
     placeholder: "Type a word: coffee, love, star…", snd: "Sound", lang: "Language", cam: "Switch camera", share: "SHARE", on: "ON", off: "OFF",
-    t: { hand: "✋ Show your hand to the camera", move: "✋ Move your hand slowly — the light follows", open: "🖐 Open your palm or make a fist — they spread or gather", breath: "🌬️ Tap ◎ on the right — breathing exercise",
+    t: { hand: "✋ Show your hand to the camera", move: "✋ Move your hand slowly — the light follows", open: "🖐 Open your palm or make a fist — they spread or gather", breath: "🌬️ Tap ◎ on the right — breathing exercise", duo: "🤝 Play together: each person shows one hand — then bring your hands close",
+      bubble: "🫧 Open your palm — bubbles float up · touch them to pop", water: "🌊 Glide your hand slowly over the water — ripples spread",
       heart: "🫶 Make a heart with two hands (or 🫰 with your fingers)", word: "✍️ Type a word below — the particles become it", fist: "✊ Make a fist — the word scatters",
       shape: "✦ Pick a shape from the right menu — then control it with your hand", ctl: "🤏 Spread fingers — bigger · 🔄 twist wrist — rotate · 🙌 two hands — stretch" },
     live: "LIVE", love: "LOVE",
-    shapes: ["Free", "Sphere", "Cube", "Star", "DNA", "Ring", "Galaxy"], bgCam: "Background: camera", bgBlack: "Background: night sky", breathT: "Breathing",
+    shapes: ["Free", "Sphere", "Cube", "Star", "DNA", "Ring", "Galaxy"], bgCam: "Background: camera", bgBlack: "Background: night sky", breathT: "Breathing", playT: "Play", liteT: "Light mode",
+    acts: [["✋", "Free", "the light follows your hand"], ["🫧", "Bubbles", "open your palm, pop with a finger"], ["🌊", "Lake", "glide your hand over the water"]],
     bIn: "Breathe in", bHold: "Hold", bOut: "Breathe out slowly", bRest: "Rest", shapeT: "Shape", colorT: "Color", skelT: "Hand skeleton", shotT: "Photo", recT: "Video",
   },
 };
@@ -358,7 +368,9 @@ function findEmoji(text) {
 // tinch ranglar: aurora, lavanda, okean, shaftoli, sakura, oy nuri
 const PALETTES = [["#8ff0d6", "#8fb4ff"], ["#c3b2ff", "#8fd8ff"], ["#6fd8ff", "#5f86ff"], ["#ffc9a0", "#ff9fb8"], ["#ffbfdc", "#c7b8ff"], ["#f0f6ff", "#a9cbff"]];
 const S = { color: clamp(parseInt(store.get("nl-color") ?? "0", 10) || 0, 0, PALETTES.length - 1), skel: store.get("nl-skel") === "1", sound: store.get("nl-snd") !== "0",
-  shape: clamp(parseInt(store.get("nl-pshape") ?? "0", 10) || 0, 0, 6), black: store.get("nl-black") !== "0", breath: false };
+  shape: clamp(parseInt(store.get("nl-pshape") ?? "0", 10) || 0, 0, 6), black: store.get("nl-black") !== "0", breath: false,
+  act: clamp(parseInt(store.get("nl-act") ?? "0", 10) || 0, 0, 2), lite: store.get("nl-lite") === "1" };
+const ACT_GLYPH = ["✋", "🫧", "🌊"];
 const SHAPE_GLYPH = ["✦", "●", "■", "★", "🧬", "◯", "🌀"];
 let learned = {}; try { learned = JSON.parse(store.get("nl-learned2") || "{}") || {}; } catch {}
 function learn(k) { if (learned[k]) return; learned[k] = 1; store.set("nl-learned2", JSON.stringify(learned)); }
@@ -520,6 +532,7 @@ const buzz = ms => { try { navigator.vibrate?.(ms); } catch {} };
 //  Zarrachalar (bitta WebGL — telefon uchun yengil)
 // ============================================================
 const N = IS_MOBILE ? 3600 : 7000;
+let NA = S.lite ? Math.round(N * 0.45) : N;   // yengil rejimda kamroq zarracha
 let renderer, scene, camera, points, geo, posAttr, colAttr, sizeAttr, W = innerWidth, H = innerHeight, pr = 1, hudPr = 1;
 const view = { x: 0, y: 0, w: W, h: H };
 let mirrored = true;
@@ -559,7 +572,7 @@ function initParticles() {
 }
 function resize() {
   W = innerWidth; H = innerHeight;
-  pr = Math.min(devicePixelRatio || 1, IS_MOBILE ? 1.5 : 2);
+  pr = Math.min(devicePixelRatio || 1, S.lite ? 1 : IS_MOBILE ? 1.5 : 2);
   hudPr = Math.min(devicePixelRatio || 1, 2);
   hudCanvas.width = W * hudPr; hudCanvas.height = H * hudPr;
   if (video.videoWidth) {
@@ -569,6 +582,8 @@ function resize() {
   if (!renderer) return;
   renderer.setPixelRatio(pr); renderer.setSize(W, H, false);
   camera.right = W; camera.bottom = H; camera.updateProjectionMatrix();
+  geo.setDrawRange(0, NA);
+  if (mode === "water") genWater();
   points.material.uniforms.uPr.value = pr;
 }
 addEventListener("resize", resize);
@@ -584,6 +599,7 @@ function applyPalette(instant = false) {
   PAL = [hex(PALETTES[S.color][0]), hex(PALETTES[S.color][1])];
   document.documentElement.style.setProperty("--a", PALETTES[S.color][0]); document.documentElement.style.setProperty("--a2", PALETTES[S.color][1]);
   if (mode === "shape") genShape(S.shape);
+  if (mode === "water") genWater();
   if (mode === "swarm") for (let i = 0; i < N; i++) { const c = swarmColor(i); P.tr[i] = c[0]; P.tg[i] = c[1]; P.tb[i] = c[2]; if (instant) { P.cr[i] = c[0]; P.cg[i] = c[1]; P.cb[i] = c[2]; } }
 }
 
@@ -617,7 +633,33 @@ function genShape(id) {
 }
 const shp = { cx: innerWidth / 2, cy: innerHeight * 0.45, scale: 160, yaw: 0, pitch: 0.35, roll: 0, zoom: 1, tcx: innerWidth / 2, tcy: innerHeight * 0.45, tscale: 160,
   tyaw: 0, tpitch: 0.35, troll: 0, spin: 0, zMin: 9, zMax: 0 };
-function baseMode() { return S.breath ? ["breath", null] : wordForm ? ["form", wordForm] : S.shape > 0 ? ["shape", null] : ["swarm", null]; }
+function baseMode() { return S.breath ? ["breath", null] : wordForm ? ["form", wordForm] : S.act === 2 ? ["water", null] : S.shape > 0 ? ["shape", null] : ["swarm", null]; }
+// 🌊 ko'l: zarrachalar ekran bo'ylab tekis suv yuzasi bo'lib turadi
+function genWater() {
+  const cols = Math.max(8, Math.round(Math.sqrt(NA * W / H))), rows = Math.ceil(NA / cols), gx = W / cols, gy = H / rows;
+  for (let i = 0; i < N; i++) {
+    const c = i % cols, r = Math.floor(i / cols) % rows;
+    P.sx[i] = (c + 0.5 + (Math.random() - .5) * 0.5) * gx; P.sy[i] = (r + 0.5 + (Math.random() - .5) * 0.5) * gy;
+    const u = P.sy[i] / H, a = PAL[0], b = PAL[1], br = 0.45 + 0.4 * Math.random();
+    P.tr[i] = (b[0] + (a[0] - b[0]) * u) * br; P.tg[i] = (b[1] + (a[1] - b[1]) * u) * br; P.tb[i] = (b[2] + (a[2] - b[2]) * u) * br;
+  }
+}
+const ripples = [];
+let lastPlop = 0;
+const PENTA = [392, 440, 523, 587, 659, 784, 880];
+function plop(x, y, a = 1) {
+  if (ripples.length > 14) ripples.shift();
+  ripples.push({ x, y, t: clock, a });
+  const now = performance.now();
+  if (now - lastPlop > 220) { lastPlop = now; tone(PENTA[Math.floor((1 - clamp(y / H, 0, 0.999)) * PENTA.length)], 1.4, 0.022 * clamp(a, 0.5, 1.2)); }
+}
+function setAct(i) {
+  S.act = i; store.set("nl-act", i); if (i === 2 && S.shape > 0) { S.shape = 0; store.set("nl-pshape", 0); }
+  if (S.breath) setBreath(false);
+  bubbles.length = 0;
+  if (!(mode === "form" && form)) { const [m, f] = baseMode(); setMode(m, f, true); }
+  renderUi(); SND.tap(); buzz(10);
+}
 // 🌬️ nafas mashqi: 4 s nafas olish · 2 s ushlab turish · 6 s chiqarish · 1 s dam
 const BR = [["bIn", 4], ["bHold", 2], ["bOut", 6], ["bRest", 1]], BR_T = 13;
 const br = { t0: 0, phase: -1, v: 0, cx: innerWidth / 2, cy: innerHeight * 0.48 };
@@ -635,6 +677,7 @@ function setBreath(on) {
 }
 function setShape(i) {
   S.shape = i; store.set("nl-pshape", i); if (i > 0) learn("shape");
+  if (i > 0 && S.act === 2) { S.act = 0; store.set("nl-act", 0); }
   if (S.breath && i > 0) { setBreath(false); }
   if (!(mode === "form" && form)) { const [m, f] = baseMode(); setMode(m, f, true); }
   renderUi(); SND.tap(); buzz(10);
@@ -698,7 +741,7 @@ function assign(f) {
 function setMode(m, f = null, force = false) {
   if (!force && m === mode && f === form) return;
   mode = m; form = f;
-  if (f) assign(f); else if (m === "shape") genShape(S.shape); else applyPalette();
+  if (f) assign(f); else if (m === "shape") genShape(S.shape); else if (m === "water") genWater(); else applyPalette();
   if (m === "breath") return;   // nafas rejimi sekin, sakrashsiz boshlanadi
   for (let i = 0; i < N; i++) { const a = Math.random() * TAU, v = 30 + Math.random() * 110; P.vx[i] += Math.cos(a) * v; P.vy[i] += Math.sin(a) * v; }
 }
@@ -735,6 +778,7 @@ function fingerStates(w) {
 const toScreen = p => ({ x: view.x + (mirrored ? 1 - p.x : p.x) * view.w, y: view.y + p.y * view.h });
 const palmOf = R => ({ x: (R[0].x + R[5].x + R[9].x + R[17].x) / 4, y: (R[0].y + R[5].y + R[9].y + R[17].y) / 4 });
 
+let duoSince = 0;
 let hands = [], lastHandSeen = 0, fistSince = 0, heartSince = 0, heartCenter = null, heartSize = 120, lastLoveSound = 0;
 const handF = [0, 1].map(() => range(21, () => [new OneEuro(1.6, 0.014), new OneEuro(1.6, 0.014)]));
 const openF = [new OneEuro(1.5, 0.01), new OneEuro(1.5, 0.01)];
@@ -780,6 +824,16 @@ function onResult(res) {
       if (mode !== "form" || !form || form.kind !== "heart") { setMode("form", buildHeart()); if (now - lastLoveSound > 2500) { SND.love(); buzz([20, 60, 20]); lastLoveSound = now; } learn("heart"); }
     }
   } else heartSince = 0;
+
+  // ---- 🤝 ikki kishi: kaftlar yaqinlashsa — o'rtada yurak ----
+  if (!heartNow && hands.length === 2 && mode === "swarm") {
+    const a0 = palmOf(hands[0].raw), a1 = palmOf(hands[1].raw), Lm = (hands[0].len + hands[1].len) / 2;
+    if (Math.hypot(a0.x - a1.x, a0.y - a1.y) < Lm * 1.5) {
+      if (!duoSince) duoSince = now;
+      if (now - duoSince > 450) { heartCenter = { x: (a0.x + a1.x) / 2, y: Math.min(a0.y, a1.y) - Lm * 1.4 }; heartSize = clamp(Lm * 1.2, 60, Math.min(W, H) * 0.28);
+        heartUntil = Date.now() + 2600; setMode("form", buildHeart()); if (now - lastLoveSound > 2500) { SND.love(); buzz([20, 60, 20]); lastLoveSound = now; } learn("duo"); duoSince = 0; }
+    } else duoSince = 0;
+  }
 
   // ---- ✦ shaklni qo'l bilan boshqarish ----
   {
@@ -866,12 +920,40 @@ function render(now) {
   }
   const Y = shp.yaw + shp.spin, cyw = Math.cos(Y), syw = Math.sin(Y), cpt = Math.cos(shp.pitch), spt = Math.sin(shp.pitch), crl = Math.cos(shp.roll), srl = Math.sin(shp.roll);
 
+  // 🌊 qo'l suv ustidan o'tsa — to'lqin
+  if (mode === "water") {
+    for (const h of hands) { const p = h.lm[8], q = waterLast[h.k];
+      if (!q) waterLast[h.k] = { x: p.x, y: p.y, t: now };
+      else { const d = Math.hypot(p.x - q.x, p.y - q.y); if (d > 40 && now - q.t > 80) { plop(p.x, p.y, clamp(d / ((now - q.t) * 0.5), 0.4, 1.3)); learn("water"); q.x = p.x; q.y = p.y; q.t = now; } } }
+    if (!hands.length) waterLast.length = 0;
+    if (!hands.length && clock - (ripples.at(-1)?.t ?? -9) > 3.5) plop(W * (0.2 + Math.random() * 0.6), H * (0.25 + Math.random() * 0.5), 0.5);
+  }
+  for (let i = ripples.length - 1; i >= 0; i--) if (clock - ripples[i].t > 4) ripples.splice(i, 1);
+  updateBubbles(now, dt);
+  // sekin qurilma: dastlabki 6 soniyada kadr tezligi past bo'lsa — yengil rejim o'zi yoqiladi
+  if (!S.lite && store.get("nl-lite") === null && clock > 2 && clock < 8) { perf.n++; perf.s += dt; if (perf.n === 150 && perf.s / perf.n > 0.034) setLite(true); }
+
+  // 🤝 ikki kishi: har bir qo'l o'z rangida, yaqinlashganda ranglar qo'shiladi
+  const duo = mode === "swarm" && hands.length === 2;
+  let duoMix = 0;
+  if (duo) { const a0 = palmOf(hands[0].lm), a1 = palmOf(hands[1].lm), Lm = (hands[0].len + hands[1].len) / 2; duoMix = clamp(1 - (Math.hypot(a0.x - a1.x, a0.y - a1.y) - Lm * 1.6) / (Lm * 4), 0, 1); }
+  if (duoWas && !duo) applyPalette();
+  duoWas = duo;
+
   // fizika
   const pa = posAttr.array, ca = colAttr.array, sa = sizeAttr.array, cAlpha = 1 - Math.exp(-4 * dt), sizeBase = IS_MOBILE ? 3.9 : 4.5;
-  for (let i = 0; i < N; i++) {
+  for (let i = 0; i < NA; i++) {
     let tx, ty, k, damp;
     let depth = 1;
-    if (mode === "breath") {
+    if (mode === "water") {
+      const gx = P.sx[i], gy = P.sy[i]; let dx = 0, dy = 0, glow = 0;
+      for (const rp of ripples) {
+        const age = clock - rp.t, ex = gx - rp.x, ey = gy - rp.y, d = Math.hypot(ex, ey) + 0.001, front = age * 200, q = (d - front) / 30;
+        if (q > -3 && q < 3) { const w = Math.exp(-q * q) * Math.sin(q * 2.2) * rp.a * Math.exp(-age * 0.85); dx += ex / d * w * 13; dy += ey / d * w * 13; glow += Math.abs(w); }
+      }
+      dy += Math.sin(gx * 0.011 + clock * 0.7) * Math.sin(gy * 0.009 + clock * 0.5) * 3;
+      tx = gx + dx; ty = gy + dy; k = 40; damp = 10; depth = 0.8 + Math.min(1.2, glow) * 1.3;
+    } else if (mode === "breath") {
       const Rb = Math.min(W, H) * (0.09 + 0.2 * br.v), rr = Math.sqrt(P.base[i]), ang = P.ang[i] + clock * 0.06 * P.spd[i];
       const wob = 1 + 0.03 * Math.sin(clock * 0.9 + P.seed[i]);
       tx = br.cx + Math.cos(ang) * rr * Rb * wob; ty = br.cy + Math.sin(ang) * rr * Rb * wob;
@@ -892,6 +974,8 @@ function render(now) {
       const ang = P.ang[i] + clock * P.spd[i], r = P.rad[i] * a.R * (1 + 0.15 * Math.sin(clock * 1.7 + P.seed[i]));
       tx = a.x + Math.cos(ang) * r + Math.sin(P.y[i] * 0.01 + clock * 0.6) * 12; ty = a.y + Math.sin(ang) * r * 0.85 + Math.cos(P.x[i] * 0.01 + clock * 0.5) * 12;
       k = P.k[i]; damp = 2.4 + P.k[i] * 0.16;
+      if (duo) { const hc = DUO[P.hand[i] & 1], m = duoMix * 0.85, bb = 0.55 + 0.45 * ((P.seed[i] * 7.3) % 1);
+        P.tr[i] = (hc[0] + (DUO[2][0] - hc[0]) * m) * bb; P.tg[i] = (hc[1] + (DUO[2][1] - hc[1]) * m) * bb; P.tb[i] = (hc[2] + (DUO[2][2] - hc[2]) * m) * bb; }
     }
     let ax = (tx - P.x[i]) * k - P.vx[i] * damp, ay = (ty - P.y[i]) * k - P.vy[i] * damp;
     P.vx[i] += ax * dt; P.vy[i] += ay * dt; P.x[i] += P.vx[i] * dt; P.y[i] += P.vy[i] * dt;
@@ -900,7 +984,7 @@ function render(now) {
     pa[i*3] = P.x[i]; pa[i*3+1] = P.y[i];
     const tw = mode === "form" ? 0.88 + 0.12 * Math.sin(clock * 1.6 + P.seed[i]) : 0.72 + 0.28 * Math.sin(clock * 1.1 + P.seed[i]);
     ca[i*3] = (P.cr[i] * tw + sp * 0.3) * depth; ca[i*3+1] = (P.cg[i] * tw + sp * 0.3) * depth; ca[i*3+2] = (P.cb[i] * tw + sp * 0.3) * depth;
-    sa[i] = (mode === "form" ? sizeBase * 0.95 : mode === "shape" ? sizeBase * (0.7 + 0.5 * depth) : sizeBase * (0.6 + P.base[i] * 0.9)) * (form && form.kind === "heart" ? beat : 1);
+    sa[i] = mode === "water" ? sizeBase * (0.75 + Math.min(0.6, depth - 0.55)) : (mode === "form" ? sizeBase * 0.95 : mode === "shape" ? sizeBase * (0.7 + 0.5 * depth) : sizeBase * (0.6 + P.base[i] * 0.9)) * (form && form.kind === "heart" ? beat : 1);
   }
   posAttr.needsUpdate = true; colAttr.needsUpdate = true; sizeAttr.needsUpdate = true;
   renderer.render(scene, camera);
@@ -910,6 +994,55 @@ function render(now) {
   if (rec) recordFrame(now);
 }
 const formCenter = { x: innerWidth / 2, y: innerHeight * 0.42 };
+const waterLast = [], perf = { n: 0, s: 0 };
+let duoWas = false;
+const DUO = [hex("#ffc29a"), hex("#7fc8ff"), hex("#ffb3d9")];   // 1-kishi: shaftoli, 2-kishi: osmon, qo'shilganda: pushti
+
+// ---------------- 🫧 Pufaklar ----------------
+const bubbles = [], sparks = [];
+let lastBubble = 0, lastAutoBubble = 0;
+function popBubble(b) {
+  b.dead = true; const n = 16;
+  for (let j = 0; j < n; j++) { const a = j / n * TAU + Math.random() * 0.3, v = 60 + Math.random() * 90; sparks.push({ x: b.x + Math.cos(a) * b.r, y: b.y + Math.sin(a) * b.r, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, c: b.c }); }
+  tone(PENTA[(Math.random() * PENTA.length) | 0] * 2, 0.9, 0.025); buzz(8); learn("bubble");
+}
+function updateBubbles(now, dt) {
+  if (S.act !== 1 || S.breath) { bubbles.length = 0; }
+  else {
+    // ochiq kaftdan pufak chiqadi
+    for (const h of hands) if (h.n >= 3 && now - lastBubble > 520 && bubbles.length < 22) {
+      lastBubble = now; const R = h.lm, r = h.len * (0.28 + Math.random() * 0.35);
+      bubbles.push({ x: R[9].x + (Math.random() - .5) * h.len * 0.5, y: R[9].y - h.len * 0.6, r: clamp(r, 14, Math.min(70, Math.min(W, H) * 0.1)), vx: (Math.random() - .5) * 20, vy: -(35 + Math.random() * 35), t: 0, ph: Math.random() * TAU, c: Math.random() });
+    }
+    // qo'l bo'lmasa — pastdan sekin pufaklar (ekranga tegib yorish uchun)
+    if (!hands.length && now - lastAutoBubble > 1500 && bubbles.length < 10) {
+      lastAutoBubble = now; bubbles.push({ x: W * (0.15 + Math.random() * 0.7), y: H + 40, r: 20 + Math.random() * 30, vx: 0, vy: -(30 + Math.random() * 25), t: 1, ph: Math.random() * TAU, c: Math.random() });
+    }
+    for (const b of bubbles) {
+      b.t += dt; b.x += (b.vx + Math.sin(clock * 1.3 + b.ph) * 14) * dt; b.y += b.vy * dt;
+      if (b.y < -b.r * 2) b.dead = true;
+      if (b.t > 0.8) for (const h of hands) for (const j of [8, 12, 4]) { const p = h.lm[j]; if (Math.hypot(p.x - b.x, p.y - b.y) < b.r * 0.9) { popBubble(b); break; } }
+    }
+  }
+  for (let i = bubbles.length - 1; i >= 0; i--) if (bubbles[i].dead) bubbles.splice(i, 1);
+  for (const s of sparks) { s.t += dt; s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= 0.94; s.vy = s.vy * 0.94 + 20 * dt; }
+  for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].t > 0.8) sparks.splice(i, 1);
+}
+function drawBubbles() {
+  const [a, b] = PALETTES[S.color];
+  for (const B of bubbles) {
+    const fade = clamp(B.t / 0.4, 0, 1), r = B.r * (0.6 + 0.4 * fade) * (1 + 0.03 * Math.sin(clock * 2 + B.ph));
+    hud.globalAlpha = fade;
+    const g = hud.createRadialGradient(B.x, B.y, r * 0.55, B.x, B.y, r);
+    g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(0.8, "rgba(255,255,255,.05)"); g.addColorStop(1, "rgba(255,255,255,.2)");
+    hud.fillStyle = g; hud.beginPath(); hud.arc(B.x, B.y, r, 0, TAU); hud.fill();
+    const lg = hud.createLinearGradient(B.x - r, B.y - r, B.x + r, B.y + r); lg.addColorStop(0, a); lg.addColorStop(0.5, "#ffd1f0"); lg.addColorStop(1, b);
+    hud.strokeStyle = lg; hud.lineWidth = 1.6; hud.globalAlpha = fade * 0.75; hud.stroke();
+    hud.globalAlpha = fade * 0.8; hud.fillStyle = "#fff"; hud.beginPath(); hud.ellipse(B.x - r * 0.38, B.y - r * 0.42, r * 0.16, r * 0.08, -0.7, 0, TAU); hud.fill();
+  }
+  for (const s of sparks) { hud.globalAlpha = 1 - s.t / 0.8; hud.fillStyle = s.c < 0.5 ? a : b; hud.beginPath(); hud.arc(s.x, s.y, 2.2, 0, TAU); hud.fill(); }
+  hud.globalAlpha = 1;
+}
 
 // ---------------- HUD ----------------
 const HC = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
@@ -919,6 +1052,7 @@ function drawHud(now) {
   hud.font = `700 13px "Manrope", system-ui, sans-serif`; hud.textAlign = "left"; hud.fillStyle = "rgba(242,245,255,.7)"; hud.fillText("Neural Link", 18, 28 + safeTop());
   if (rec) { hud.fillStyle = "#ff6b81"; hud.beginPath(); hud.arc(23, 44 + safeTop(), 3.5, 0, TAU); hud.fill();
     hud.font = `600 11px "Manrope", system-ui, sans-serif`; hud.fillText(`${Math.floor((now - rec.start) / 1000)}s`, 32, 48 + safeTop()); }
+  drawBubbles();
   if (S.skel) for (const h of hands) {
     hud.strokeStyle = "rgba(255,255,255,.16)"; hud.lineWidth = 1.2; hud.beginPath();
     for (const [p, q] of HC) { hud.moveTo(h.lm[p].x, h.lm[p].y); hud.lineTo(h.lm[q].x, h.lm[q].y); } hud.stroke();
@@ -938,10 +1072,13 @@ function updateTip() {
   if (S.breath) k = null;
   else if (!hands.length) k = learned.hand ? (learned.word ? null : "word") : "hand";
   else if (!learned.move) k = "move";
+  else if (S.act === 1 && !learned.bubble) k = "bubble";
+  else if (S.act === 2 && !learned.water) k = "water";
   else if (!learned.breath) k = "breath";
   else if (!learned.open) k = "open";
   else if (!learned.heart) k = "heart";
   else if (!learned.word) k = "word";
+  else if (!learned.duo) k = "duo";
   else if (!learned.shape) k = "shape";
   else if (mode === "shape" && !learned.ctl) k = "ctl";
   else if (wordForm && !learned.fist) k = "fist";
@@ -1007,11 +1144,13 @@ function renderUi() {
   $("tips").innerHTML = t("tips").map(([e, d]) => `<div><i>${e}</i>${d}</div>`).join("");
   $("word").placeholder = t("placeholder");
   if ($("go").disabled) $("go").textContent = t("loading");
-  $("rSkel").classList.toggle("on", S.skel);
+  $("skName").textContent = S.skel ? t("on") : t("off"); $("liName").textContent = S.lite ? t("on") : t("off");
+  $("actGlyph").textContent = ACT_GLYPH[S.act]; $("rPlay").classList.toggle("on", S.act > 0);
+  $("acts").innerHTML = t("acts").map(([g, n, d], i) => `<button class="sh ${i === S.act ? "on" : ""}" data-a="${i}"><i>${g}</i><span>${n}<small>${d}</small></span></button>`).join("");
   document.body.classList.toggle("blackbg", S.black); $("rBg").classList.toggle("on", S.black);
   $("shapeGlyph").textContent = SHAPE_GLYPH[S.shape]; $("rShape").classList.toggle("on", S.shape > 0);
   $("shapes").innerHTML = t("shapes").map((n, i) => `<button class="sh ${i === S.shape ? "on" : ""}" data-s="${i}"><i>${SHAPE_GLYPH[i]}</i>${n}</button>`).join("");
-  const tips = { rBreath: t("breathT"), rShape: t("shapeT") + ": " + t("shapes")[S.shape], rColor: t("colorT"), rBg: S.black ? t("bgBlack") : t("bgCam"), rSkel: t("skelT"), rShot: t("shotT"), rRec: t("recT") };
+  const tips = { rBreath: t("breathT"), rShape: t("shapeT") + ": " + t("shapes")[S.shape], rColor: t("colorT"), rBg: S.black ? t("bgBlack") : t("bgCam"), rPlay: t("playT") + ": " + t("acts")[S.act][1], rShot: t("shotT"), rRec: t("recT") };
   for (const [id, lbl] of Object.entries(tips)) { $(id).title = lbl; $(id).setAttribute("aria-label", lbl); }
   $("sName").textContent = S.sound ? t("on") : t("off"); $("lName").textContent = lang.toUpperCase();
   tipText = null;
@@ -1024,7 +1163,16 @@ $("rBreath").onclick = () => setBreath(!S.breath);
 $("shapes").onclick = e => { const b = e.target.closest(".sh"); if (b) { setShape(+b.dataset.s); toggleShapes(false); } };
 $("rBg").onclick = () => { S.black = !S.black; store.set("nl-black", S.black ? "1" : "0"); renderUi(); SND.tap(); };
 $("rColor").onclick = () => { S.color = (S.color + 1) % PALETTES.length; store.set("nl-color", S.color); applyPalette(); if (wordForm && mode === "form" && form.kind === "word") { wordForm = buildWord(wordForm.label); setMode("form", wordForm); } SND.tap(); };
-$("rSkel").onclick = () => { S.skel = !S.skel; store.set("nl-skel", S.skel ? "1" : "0"); renderUi(); SND.tap(); };
+$("mSkel").onclick = () => { S.skel = !S.skel; store.set("nl-skel", S.skel ? "1" : "0"); renderUi(); SND.tap(); };
+function setLite(on) {
+  S.lite = on; store.set("nl-lite", on ? "1" : "0"); NA = on ? Math.round(N * 0.45) : N;
+  if (renderer) { resize(); if (wordForm && mode === "form" && form.kind === "word") assign(form); }
+  renderUi();
+}
+$("mLite").onclick = () => { setLite(!S.lite); SND.tap(); };
+const toggleActs = force => { const o = force ?? !$("acts").classList.contains("open"); $("acts").classList.toggle("open", o); if (o) { toggleMore(false); toggleShapes(false); } };
+$("rPlay").onclick = () => { toggleActs(); SND.tap(); };
+$("acts").onclick = e => { const b = e.target.closest(".sh"); if (b) { setAct(+b.dataset.a); toggleActs(false); } };
 $("rShot").onclick = () => { captureRequested = true; };
 $("rRec").onclick = () => rec ? stopRec() : startRec();
 $("rMore").onclick = () => toggleMore();
@@ -1032,7 +1180,15 @@ $("mSnd").onclick = () => { S.sound = !S.sound; store.set("nl-snd", S.sound ? "1
 $("mLang").onclick = () => setLang(lang === "en" ? "uz" : "en");
 $("mCam").onclick = () => switchCamera();
 document.querySelectorAll(".langsw button").forEach(b => b.onclick = () => setLang(b.dataset.l));
-addEventListener("pointerdown", e => { if (!e.target.closest("#more, #rMore")) toggleMore(false); if (!e.target.closest("#shapes, #rShape")) toggleShapes(false); });
+addEventListener("pointerdown", e => { if (!e.target.closest("#more, #rMore")) toggleMore(false); if (!e.target.closest("#shapes, #rShape")) toggleShapes(false); if (!e.target.closest("#acts, #rPlay")) toggleActs(false);
+  // ekranga tegish: pufakni yorish yoki suvga to'lqin
+  if (!document.body.classList.contains("running") || e.target.closest("#rail, #more, #shapes, #acts, #bottom, #share, #err")) return;
+  for (const b of bubbles) if (Math.hypot(e.clientX - b.x, e.clientY - b.y) < b.r * 1.1) { popBubble(b); return; }
+  if (mode === "water") { plop(e.clientX, e.clientY, 1); learn("water"); }
+});
+let lastDragPlop = 0;
+addEventListener("pointermove", e => { if (mode !== "water" || !e.buttons || e.target.closest("#rail, #more, #shapes, #acts, #bottom")) return;
+  const now = performance.now(); if (now - lastDragPlop > 110) { lastDragPlop = now; plop(e.clientX, e.clientY, 0.8); } });
 $("say").onsubmit = e => { e.preventDefault(); showWord($("word").value); $("word").blur(); };
 $("clear").onclick = () => clearWord(true);
 if (!canRecord) $("rRec").hidden = true;
