@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#070a18">
-<meta name="description" content="Neural Link — a calming fidget toy: your hand turns into light, pinch to gather, let go to burst, pop bubbles. Qo'lingiz nurga aylanadi.">
+<meta name="description" content="Neural Link — a calming fidget toy: your hand turns into light, pinch to gather, let go to burst, charge up and blast. Qo'lingiz nurga aylanadi.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -49,7 +49,7 @@
   .vig { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.55) 100%); }
   #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 30; }
   #flash.go { animation: flash .4s ease-out; }
-  @keyframes flash { from { opacity: .55; } to { opacity: 0; } }
+  @keyframes flash { from { opacity: .3; } to { opacity: 0; } }
   .glass { background: var(--glass); border: 1px solid var(--border); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4);
     box-shadow: 0 12px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06); }
   .ui { opacity: 0; transition: opacity .8s; }
@@ -233,37 +233,37 @@ const store = { get(k) { try { return localStorage.getItem(k); } catch { return 
 // ============================================================
 const I18N = {
   uz: {
-    tagline: "Qo'lingiz minglab nurga aylanadi. Chimdib to'plang, qo'yib yuboring — portlaydi. Pufaklarni yoring, yurak yasang. Bolalar uchun ham, kattalar uchun ham tinchlantiruvchi fidget o'yinchoq.",
+    tagline: "Qo'lingiz minglab nurga aylanadi. Chimdib to'plang, qo'yib yuboring — portlaydi. Zaryad yig'ib portlating, yurak yasang. Bolalar uchun ham, kattalar uchun ham tinchlantiruvchi fidget o'yinchoq.",
     tips: [["🤏", "chimdib nur to'plang"], ["🚀", "silkitib oting — salyut!"], ["👏", "qarsak — zarba to'lqini"]],
     start: "BOSHLASH", loading: "YUKLANMOQDA…", foot: "qurilmangizda ishlaydi · video hech qayerga yuborilmaydi · kamerasiz ham ekranga tegib o'ynash mumkin",
     sCam: "Kamera ochilmoqda…", sModel: "Qo'l kuzatuvi yuklanmoqda…", denied: "Kameraga ruxsat berilmadi. Brauzer sozlamalaridan kameraga ruxsat bering va sahifani yangilang.",
     insecure: "Kamera faqat https manzilda ishlaydi.", noCam: "Kamera topilmadi.", error: "Xatolik",
     placeholder: "So'z yozing: coffee, sevgi, yulduz…", snd: "Ovoz", lang: "Til", cam: "Kamerani almashtirish", share: "ULASHISH", on: "YONIQ", off: "O'CHIQ",
     t: { hand: "✋ Qo'lingizni kameraga ko'rsating — yoki ekranga tegib torting", pinch: "🤏 Bosh va ko'rsatkich barmoqni qisib nur to'plang… keyin qo'yib yuboring!", throw: "🚀 Nur sharini ushlab turib qo'lni tez silkiting — otilib, salyut bo'lib portlaydi!", clap: "👏 Ikki qo'l bilan qarsak chaling — zarba to'lqini!",
-      duo: "🤝 Ikki kishi bo'lib o'ynang: har biringiz bitta qo'l ko'rsating va kaftlarni yaqinlashtiring", play: "🫧 O'ngdagi ✋ tugmasi → Pufaklar",
-      bubble: "🫧 Kaftni oching — pufaklar chiqadi · barmoq bilan tegib yoring",
+      duo: "🤝 Ikki kishi bo'lib o'ynang: har biringiz bitta qo'l ko'rsating va kaftlarni yaqinlashtiring", play: "⚡ O'ngdagi ✋ tugmasi → Zaryad",
+      charge: "⚡ Kaftni ochib ushlab turing — zaryad yig'iladi… keyin MUSHT qiling! Uzoqroq ushlasangiz — MEGA!",
       heart: "🫶 Ikki qo'l bilan (yoki 🫰 barmoq bilan) yurak qiling", word: "✍️ Pastga so'z yozing — nurlar o'shanga aylanadi", fist: "✊ Musht qiling — so'z tarqaladi",
       shape: "✦ O'ngdagi ✦ menyudan shakl tanlang — keyin uni qo'l bilan boshqaring", ctl: "🤏 Barmoqni yozing — kattalashadi · 🔄 bilakni buring — aylanadi · 🙌 ikki qo'l — cho'zing" },
-    love: "SEVGI", pops: "yorildi",
+    love: "SEVGI", charged: "ZARYADLANDI! ✊", mega: "MEGA! ✊",
     shapes: ["Erkin", "Shar", "Kub", "Yulduz", "DNK", "Halqa", "Galaktika"], bgCam: "Fon: kamera", bgBlack: "Fon: tungi osmon", playT: "O'yin", liteT: "Yengil rejim",
-    acts: [["✋", "Nur qo'l", "chimdib to'plang, qo'yib yuboring"], ["🫧", "Pufaklar", "kaftni oching, barmoq bilan yoring"]],
+    acts: [["✋", "Nur qo'l", "chimdib to'plang, qo'yib yuboring"], ["⚡", "Zaryad", "kaftni oching — zaryad, musht — portlash"]],
     shapeT: "Shakl", colorT: "Rang", skelT: "Qo'l skeleti", shotT: "Surat", recT: "Video",
   },
   en: {
-    tagline: "Your hand turns into thousands of lights. Pinch to gather, let go to burst. Pop bubbles, make a heart. A calming fidget toy for kids and grown-ups.",
+    tagline: "Your hand turns into thousands of lights. Pinch to gather, let go to burst. Charge up and blast, make a heart. A calming fidget toy for kids and grown-ups.",
     tips: [["🤏", "pinch to gather light"], ["🚀", "flick to throw — fireworks!"], ["👏", "clap — shockwave"]],
     start: "START", loading: "LOADING…", foot: "runs on your device · video never leaves it · no camera? touch the screen to play",
     sCam: "Opening camera…", sModel: "Loading hand tracking…", denied: "Camera access was denied. Allow the camera in your browser settings and reload.",
     insecure: "The camera only works over https.", noCam: "No camera found.", error: "Error",
     placeholder: "Type a word: coffee, love, star…", snd: "Sound", lang: "Language", cam: "Switch camera", share: "SHARE", on: "ON", off: "OFF",
     t: { hand: "✋ Show your hand to the camera — or drag on the screen", pinch: "🤏 Pinch thumb and index to gather the light… then let go!", throw: "🚀 Hold the ball and flick your hand — it flies and bursts into fireworks!", clap: "👏 Clap your hands — shockwave!",
-      duo: "🤝 Play together: each person shows one hand — then bring your palms close", play: "🫧 Tap ✋ on the right → Bubbles",
-      bubble: "🫧 Open your palm — bubbles float up · touch them to pop",
+      duo: "🤝 Play together: each person shows one hand — then bring your palms close", play: "⚡ Tap ✋ on the right → Charge",
+      charge: "⚡ Hold your palm open to charge… then make a FIST! Hold longer for MEGA!",
       heart: "🫶 Make a heart with two hands (or 🫰 with your fingers)", word: "✍️ Type a word below — the light becomes it", fist: "✊ Make a fist — the word scatters",
       shape: "✦ Pick a shape from the ✦ menu — then control it with your hand", ctl: "🤏 Spread fingers — bigger · 🔄 twist wrist — rotate · 🙌 two hands — stretch" },
-    love: "LOVE", pops: "popped",
+    love: "LOVE", charged: "CHARGED! ✊", mega: "MEGA! ✊",
     shapes: ["Free", "Sphere", "Cube", "Star", "DNA", "Ring", "Galaxy"], bgCam: "Background: camera", bgBlack: "Background: night sky", playT: "Play", liteT: "Light mode",
-    acts: [["✋", "Light hand", "pinch to gather, let go"], ["🫧", "Bubbles", "open your palm, pop with a finger"]],
+    acts: [["✋", "Light hand", "pinch to gather, let go"], ["⚡", "Charge", "open palm to charge, fist to blast"]],
     shapeT: "Shape", colorT: "Color", skelT: "Hand skeleton", shotT: "Photo", recT: "Video",
   },
 };
@@ -365,7 +365,7 @@ const PALETTES = [["#8ff0d6", "#8fb4ff"], ["#c3b2ff", "#8fd8ff"], ["#6fd8ff", "#
 const S = { color: clamp(parseInt(store.get("nl-color") ?? "0", 10) || 0, 0, PALETTES.length - 1), skel: store.get("nl-skel") === "1", sound: store.get("nl-snd") !== "0",
   shape: clamp(parseInt(store.get("nl-pshape") ?? "0", 10) || 0, 0, 6), black: store.get("nl-black") !== "0",
   act: clamp(parseInt(store.get("nl-act") ?? "0", 10) || 0, 0, 1), lite: store.get("nl-lite") === "1" };
-const ACT_GLYPH = ["✋", "🫧"];
+const ACT_GLYPH = ["✋", "⚡"];
 const SHAPE_GLYPH = ["✦", "●", "■", "★", "🧬", "◯", "🌀"];
 let learned = {}; try { learned = JSON.parse(store.get("nl-learned2") || "{}") || {}; } catch {}
 function learn(k) { if (learned[k]) return; learned[k] = 1; store.set("nl-learned2", JSON.stringify(learned)); }
@@ -628,7 +628,7 @@ const shp = { cx: innerWidth / 2, cy: innerHeight * 0.45, scale: 160, yaw: 0, pi
 function baseMode() { return wordForm ? ["form", wordForm] : S.shape > 0 ? ["shape", null] : ["swarm", null]; }
 function setAct(i) {
   S.act = i; store.set("nl-act", i);
-  bubbles.length = 0;
+  chg.forEach(c => { c.v = 0; });
   if (!(mode === "form" && form)) { const [m, f] = baseMode(); setMode(m, f, true); }
   renderUi(); SND.tap(); buzz(10);
 }
@@ -827,6 +827,7 @@ function render(now) {
 
   // yurak tugagach — so'z yoki ergashishga qaytish
   if (mode === "form" && form && form.kind === "heart" && Date.now() > heartUntil) { const [m, f] = baseMode(); setMode(m, f); }
+  if (mode === "form" && form && form.kind === "surprise" && Date.now() > surpriseUntil) { const [m, f] = baseMode(); setMode(m, f); }
 
   // 🤏 chimdish: bosh va ko'rsatkich barmoq qisilsa nur to'planadi, qo'yib yuborilsa portlaydi
   const grabs = [null, null];
@@ -892,7 +893,7 @@ function render(now) {
   }
   const Y = shp.yaw + shp.spin, cyw = Math.cos(Y), syw = Math.sin(Y), cpt = Math.cos(shp.pitch), spt = Math.sin(shp.pitch), crl = Math.cos(shp.roll), srl = Math.sin(shp.roll);
 
-  updateBubbles(now, dt);
+  updateCharge(now, dt, grabs);
   // sekin qurilma: dastlabki 6 soniyada kadr tezligi past bo'lsa — yengil rejim o'zi yoqiladi
   if (!S.lite && store.get("nl-lite") === null && clock > 2 && clock < 8) { perf.n++; perf.s += dt; if (perf.n === 150 && perf.s / perf.n > 0.034) setLite(true); }
 
@@ -921,10 +922,11 @@ function render(now) {
       k = 26 + P.k[i]; damp = 9;
     } else {
       const hi = hands.length === 2 ? (P.hand[i] & 1) : 0, h = hands[hi], g = h ? grabs[h.k] : grabs[0];
-      if (g) {
+      if (g && (g.share === undefined || P.base[i] < g.share)) {
         // to'plangan nur shari — aylanib turadi, ushlab turilgan sari kattalashadi va yorqinlashadi
         const ang = P.ang[i] + clock * P.spd[i] * 4, r = P.rad[i] * g.R * (0.3 + 0.7 * P.base[i]) * (1 + 0.06 * Math.sin(clock * 9 + P.seed[i]));
         tx = g.x + Math.cos(ang) * r; ty = g.y + Math.sin(ang) * r; k = 110; damp = 15; depth = 1.15 + g.c * 0.7;
+        if (g.lvl >= 1) { const hc = hsl((clock * 0.45 + P.base[i] * (g.lvl >= 2 ? 1 : 0.2)) % 1); P.cr[i] += (hc[0] * 1.3 - P.cr[i]) * 0.15; P.cg[i] += (hc[1] * 1.3 - P.cg[i]) * 0.15; P.cb[i] += (hc[2] * 1.3 - P.cb[i]) * 0.15; }
       } else if (h && (i % 10) < 8) {
         // ✋ nur qo'l: zarrachalar qo'lning suyaklari bo'ylab yopishadi — kechikmaydi
         const bi = (i >> 1) % 25, tt = P.seed[i] % 1, L = h.lm;
@@ -1014,50 +1016,68 @@ const burstFx = [];
 let duoWas = false;
 const DUO = [hex("#ffc29a"), hex("#7fc8ff"), hex("#ffb3d9")];   // 1-kishi: shaftoli, 2-kishi: osmon, qo'shilganda: pushti
 
-// ---------------- 🫧 Pufaklar ----------------
-const bubbles = [], sparks = [];
-let popCount = parseInt(store.get("nl-pops") || "0", 10) || 0;
-let lastBubble = 0, lastAutoBubble = 0;
-function popBubble(b) {
-  b.dead = true; const n = 16; popCount++; if (popCount % 10 === 0) store.set("nl-pops", popCount);
-  for (let j = 0; j < n; j++) { const a = j / n * TAU + Math.random() * 0.3, v = 60 + Math.random() * 90; sparks.push({ x: b.x + Math.cos(a) * b.r, y: b.y + Math.sin(a) * b.r, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, c: b.c }); }
-  tone(PENTA[(Math.random() * PENTA.length) | 0] * 2, 0.9, 0.025); buzz(8); learn("bubble");
+// ---------------- ⚡ Zaryad ----------------
+// kaft ochiq turganda nur kaftga so'riladi (0→100% — ZARYADLANDI, 100→200% — MEGA), musht qilinganda katta portlash
+const chg = [0, 1].map(() => ({ v: 0, open: 0, x: 0, y: 0, len: 100, cool: 0, lastLvl: 0 }));
+const SURPRISE = ["🌟", "🚀", "🦄", "🌈", "🐱", "🐶", "🦋", "🍭", "👑", "🐼", "🦊", "🎈", "🌸", "🐬", "⚽", "🍦"];
+let surpriseUntil = 0, hum = null, shake = 0;
+function setHum(v) {
+  if (!actx) return;
+  if (!hum) { const o = actx.createOscillator(), o2 = actx.createOscillator(), f = actx.createBiquadFilter(), g = actx.createGain();
+    o.type = "sawtooth"; o2.type = "sine"; f.type = "lowpass"; f.frequency.value = 500; g.gain.value = 0.0001; o.connect(f); o2.connect(f); f.connect(g); g.connect(master); o.start(); o2.start(); hum = { o, o2, f, g }; }
+  const tt = actx.currentTime, on = S.sound && v > 0.02;
+  hum.o.frequency.setTargetAtTime(90 + v * 160, tt, 0.05); hum.o2.frequency.setTargetAtTime(180 + v * 320, tt, 0.05); hum.f.frequency.setTargetAtTime(300 + v * 900, tt, 0.05);
+  hum.g.gain.setTargetAtTime(on ? 0.012 + v * 0.018 : 0.0001, tt, 0.06);
 }
-function updateBubbles(now, dt) {
-  if (S.act !== 1) { bubbles.length = 0; }
-  else {
-    // ochiq kaftdan pufak chiqadi
-    for (const h of hands) if (h.n >= 3 && now - lastBubble > 520 && bubbles.length < 22) {
-      lastBubble = now; const R = h.lm, r = h.len * (0.28 + Math.random() * 0.35);
-      bubbles.push({ x: R[9].x + (Math.random() - .5) * h.len * 0.5, y: R[9].y - h.len * 0.6, r: clamp(r, 14, Math.min(70, Math.min(W, H) * 0.1)), vx: (Math.random() - .5) * 20, vy: -(35 + Math.random() * 35), t: 0, ph: Math.random() * TAU, c: Math.random() });
-    }
-    // qo'l bo'lmasa — pastdan sekin pufaklar (ekranga tegib yorish uchun)
-    if (!hands.length && now - lastAutoBubble > 1500 && bubbles.length < 10) {
-      lastAutoBubble = now; bubbles.push({ x: W * (0.15 + Math.random() * 0.7), y: H + 40, r: 20 + Math.random() * 30, vx: 0, vy: -(30 + Math.random() * 25), t: 1, ph: Math.random() * TAU, c: Math.random() });
-    }
-    for (const b of bubbles) {
-      b.t += dt; b.x += (b.vx + Math.sin(clock * 1.3 + b.ph) * 14) * dt; b.y += b.vy * dt;
-      if (b.y < -b.r * 2) b.dead = true;
-      if (b.t > 0.8) for (const h of hands) for (const j of [8, 12, 4]) { const p = h.lm[j]; if (Math.hypot(p.x - b.x, p.y - b.y) < b.r * 0.9) { popBubble(b); break; } }
-    }
+function updateCharge(now, dt, grabs) {
+  let hv = 0;
+  for (let k = 0; k < 2; k++) {
+    const c = chg[k], h = hands.find(q => q.k === k);
+    if (!h || S.act !== 1 || mode !== "swarm") { c.v = Math.max(0, c.v - dt * 2); continue; }
+    const pm = palmOf(h.lm);
+    const charging = h.n >= 3 && !pinchSt[k].on && now > c.cool;
+    if (charging) { c.open = now; c.x = pm.x; c.y = pm.y; c.len = h.len; c.v = Math.min(2, c.v + dt / (c.v < 1 ? 1.2 : 1.6)); }
+    else if (h.n <= 1 && c.v > 0.15 && now - c.open < 600) { fireCharge(k, c.x, c.y, c.v); continue; }
+    else c.v = Math.max(0, c.v - dt * 1.2);
+    const lvl = c.v >= 2 ? 2 : c.v >= 1 ? 1 : 0;
+    if (lvl > c.lastLvl) { if (lvl === 1) { tone(1568, 0.25, 0.04); tone(2093, 0.3, 0.03, 0.08); buzz(25); } else { [1047, 1319, 1568, 2093].forEach((f, i) => tone(f, 0.5, 0.03, i * 0.06)); buzz([20, 30, 20]); } learn("charge"); }
+    c.lastLvl = lvl;
+    if (c.v > 0.03) grabs[k] = { x: c.x, y: c.y, R: c.len * (0.32 - 0.12 * Math.min(1, c.v)) * (1 + 0.05 * Math.sin(clock * (8 + c.v * 10))), c: Math.min(1, c.v), share: Math.min(1, 0.12 + c.v * 0.9), lvl: c.v };
+    hv = Math.max(hv, c.v / 2);
   }
-  for (let i = bubbles.length - 1; i >= 0; i--) if (bubbles[i].dead) bubbles.splice(i, 1);
-  for (const s of sparks) { s.t += dt; s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= 0.94; s.vy = s.vy * 0.94 + 20 * dt; }
-  for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].t > 0.8) sparks.splice(i, 1);
+  setHum(hv);
+  if (shake > 0) { shake = Math.max(0, shake - dt * 2.5); const a = shake * 14; const tr = `translate(${(Math.random() - .5) * a}px, ${(Math.random() - .5) * a}px)`; fxCanvas.style.transform = tr; hudCanvas.style.transform = tr; }
+  else if (fxCanvas.style.transform) { fxCanvas.style.transform = ""; hudCanvas.style.transform = ""; }
 }
-function drawBubbles() {
-  const [a, b] = PALETTES[S.color];
-  for (const B of bubbles) {
-    const fade = clamp(B.t / 0.4, 0, 1), r = B.r * (0.6 + 0.4 * fade) * (1 + 0.03 * Math.sin(clock * 2 + B.ph));
-    hud.globalAlpha = fade;
-    const g = hud.createRadialGradient(B.x, B.y, r * 0.55, B.x, B.y, r);
-    g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(0.8, "rgba(255,255,255,.05)"); g.addColorStop(1, "rgba(255,255,255,.2)");
-    hud.fillStyle = g; hud.beginPath(); hud.arc(B.x, B.y, r, 0, TAU); hud.fill();
-    const lg = hud.createLinearGradient(B.x - r, B.y - r, B.x + r, B.y + r); lg.addColorStop(0, a); lg.addColorStop(0.5, "#ffd1f0"); lg.addColorStop(1, b);
-    hud.strokeStyle = lg; hud.lineWidth = 1.6; hud.globalAlpha = fade * 0.75; hud.stroke();
-    hud.globalAlpha = fade * 0.8; hud.fillStyle = "#fff"; hud.beginPath(); hud.ellipse(B.x - r * 0.38, B.y - r * 0.42, r * 0.16, r * 0.08, -0.7, 0, TAU); hud.fill();
+function fireCharge(k, x, y, v) {
+  const c = chg[k]; c.v = 0; c.cool = performance.now() + 700; c.lastLvl = 0;
+  const pow = 0.5 + v * 0.6, mega = v >= 2;
+  for (let i = 0; i < NA; i++) { const dx = P.x[i] - x, dy = P.y[i] - y, d = Math.hypot(dx, dy) + 1, a = Math.atan2(dy, dx) + (Math.random() - .5) * 0.5, sp = (500 + Math.random() * 1300) * pow * (0.5 + 0.5 * Math.exp(-d / 400));
+    P.vx[i] += Math.cos(a) * sp; P.vy[i] += Math.sin(a) * sp;
+    const hc = mega ? hsl((P.seed[i] * 0.37 + clock * 0.2) % 1) : v >= 1 ? hsl((0.55 + P.base[i] * 0.25) % 1) : null; if (hc) { P.cr[i] = hc[0] * 1.8; P.cg[i] = hc[1] * 1.8; P.cb[i] = hc[2] * 1.8; } }
+  tone(70, 1.0, 0.08); tone(140, 0.7, 0.04); (mega ? [523, 659, 784, 1047, 1319] : [659, 880]).forEach((f, i) => tone(f, 1.2, 0.02, 0.06 + i * 0.07));
+  buzz(mega ? [60, 40, 60, 40, 80] : [40, 30, 40]); shake = mega ? 1 : 0.5 + v * 0.25;
+  burstFx.push({ x, y, t: 0, r: c.len * 0.6, c: 1, col: mega ? "#ffd36b" : "#ffffff" }); if (v >= 1) burstFx.push({ x, y, t: -0.12, r: c.len * 0.4, c: 1, col: PALETTES[S.color][0] });
+  const f = $("flash"); f.classList.remove("go"); void f.offsetWidth; f.classList.add("go");
+  learn("charge");
+  // 🎁 MEGA dan keyin — syurpriz rasm (bolalar uchun)
+  if (mega && !wordForm) setTimeout(() => { if (mode !== "swarm") return; const sf = buildWord(SURPRISE[(Math.random() * SURPRISE.length) | 0]); if (!sf.pts.length) return; sf.kind = "surprise"; surpriseUntil = Date.now() + 2600; setMode("form", sf); SND.form(); }, 650);
+}
+function drawCharge() {
+  for (let k = 0; k < 2; k++) {
+    const c = chg[k]; if (c.v < 0.03 || S.act !== 1 || !hands.some(h => h.k === k)) continue;
+    const v = Math.min(1, c.v), mega = c.v >= 2, col = c.v >= 1 ? `hsl(${(clock * 160) % 360},90%,70%)` : PALETTES[S.color][1], base = c.len * 0.55;
+    hud.lineCap = "round";
+    for (let ri = 0; ri < 3; ri++) {
+      const r = base * (0.55 + ri * 0.28) * (0.75 + 0.25 * v), rot = clock * (ri % 2 ? -2.4 : 3.2) * (1 + c.v), segs = ri === 1 ? 6 : 10;
+      hud.strokeStyle = col; hud.globalAlpha = (0.3 + 0.5 * v) * (mega ? 0.8 + 0.2 * Math.sin(clock * 30) : 1); hud.lineWidth = ri === 0 ? 2.5 : 1.6;
+      for (let s2 = 0; s2 < segs; s2++) { const a0 = rot + s2 / segs * TAU; hud.beginPath(); hud.arc(c.x, c.y, r, a0, a0 + TAU / segs * 0.62); hud.stroke(); }
+    }
+    // zaryad yoyi
+    hud.globalAlpha = 0.9; hud.lineWidth = 4; hud.strokeStyle = col; hud.beginPath(); hud.arc(c.x, c.y, base * 1.45, -Math.PI / 2, -Math.PI / 2 + TAU * (c.v >= 1 ? (c.v - 1) || 0.001 : c.v)); hud.stroke();
+    hud.globalAlpha = 1; hud.textAlign = "center"; hud.font = `800 ${c.v >= 1 ? 17 : 14}px "Manrope", system-ui, sans-serif`; hud.fillStyle = c.v >= 1 ? col : "rgba(242,245,255,.85)";
+    hud.fillText(mega ? t("mega") : c.v >= 1 ? t("charged") : `⚡ ${Math.round(c.v * 100)}%`, c.x, c.y + base * 1.45 + 26);
   }
-  for (const s of sparks) { hud.globalAlpha = 1 - s.t / 0.8; hud.fillStyle = s.c < 0.5 ? a : b; hud.beginPath(); hud.arc(s.x, s.y, 2.2, 0, TAU); hud.fill(); }
   hud.globalAlpha = 1;
 }
 
@@ -1070,10 +1090,9 @@ function drawHud(now) {
   if (rec) { hud.fillStyle = "#ff6b81"; hud.beginPath(); hud.arc(23, 44 + safeTop(), 3.5, 0, TAU); hud.fill();
     hud.font = `600 11px "Manrope", system-ui, sans-serif`; hud.fillText(`${Math.floor((now - rec.start) / 1000)}s`, 32, 48 + safeTop()); }
   drawTrails(now);
-  drawBubbles();
+  drawCharge();
   for (let j = burstFx.length - 1; j >= 0; j--) { const b = burstFx[j]; b.t += 1 / 60; if (b.t > 0.6) { burstFx.splice(j, 1); continue; }
-    hud.globalAlpha = (1 - b.t / 0.6) * (0.35 + b.c * 0.4); hud.strokeStyle = b.col || PALETTES[S.color][1]; hud.lineWidth = 2 + b.c * 3; hud.beginPath(); hud.arc(b.x, b.y, b.r * (0.5 + b.t * 6), 0, TAU); hud.stroke(); hud.globalAlpha = 1; }
-  if (S.act === 1 && popCount) { hud.font = `600 12px "Manrope", system-ui, sans-serif`; hud.textAlign = "left"; hud.fillStyle = "rgba(242,245,255,.55)"; hud.fillText(`🫧 ${popCount} ${t("pops")}`, 18, 48 + safeTop()); }
+    if (b.t < 0) continue; hud.globalAlpha = (1 - b.t / 0.6) * (0.35 + b.c * 0.4); hud.strokeStyle = b.col || PALETTES[S.color][1]; hud.lineWidth = 2 + b.c * 3; hud.beginPath(); hud.arc(b.x, b.y, Math.max(1, b.r * (0.5 + b.t * 6)), 0, TAU); hud.stroke(); hud.globalAlpha = 1; }
   if (S.skel) for (const h of hands) {
     hud.strokeStyle = "rgba(255,255,255,.16)"; hud.lineWidth = 1.2; hud.beginPath();
     for (const [p, q] of HC) { hud.moveTo(h.lm[p].x, h.lm[p].y); hud.lineTo(h.lm[q].x, h.lm[q].y); } hud.stroke();
@@ -1094,7 +1113,7 @@ function updateTip() {
   else if (!learned.pinch) k = "pinch";
   else if (!learned.throw) k = "throw";
   else if (!learned.clap) k = "clap";
-  else if (S.act === 1 && !learned.bubble) k = "bubble";
+  else if (S.act === 1 && !learned.charge) k = "charge";
   else if (!learned.play) k = "play";
   else if (!learned.heart) k = "heart";
   else if (!learned.word) k = "word";
@@ -1200,12 +1219,11 @@ $("mLang").onclick = () => setLang(lang === "en" ? "uz" : "en");
 $("mCam").onclick = () => switchCamera();
 document.querySelectorAll(".langsw button").forEach(b => b.onclick = () => setLang(b.dataset.l));
 addEventListener("pointerdown", e => { if (!e.target.closest("#more, #rMore")) toggleMore(false); if (!e.target.closest("#shapes, #rShape")) toggleShapes(false); if (!e.target.closest("#acts, #rPlay")) toggleActs(false);
-  // ekranga tegish: pufakni yorish yoki suvga to'lqin
+  // ekranga tegish: barmoq ostida nur to'planadi
   if (!document.body.classList.contains("running") || e.target.closest("#rail, #more, #shapes, #acts, #bottom, #share, #err")) return;
-  for (const b of bubbles) if (Math.hypot(e.clientX - b.x, e.clientY - b.y) < b.r * 1.1) { popBubble(b); return; }
   Object.assign(ptr, { down: true, x: e.clientX, y: e.clientY, px: e.clientX, py: e.clientY, vx: 0, vy: 0, since: performance.now(), charge: 0 });
 });
-addEventListener("pointermove", e => { if (ptr.down) { ptr.x = e.clientX; ptr.y = e.clientY; for (const b of bubbles) if (!b.dead && Math.hypot(ptr.x - b.x, ptr.y - b.y) < b.r) popBubble(b); } });
+addEventListener("pointermove", e => { if (ptr.down) { ptr.x = e.clientX; ptr.y = e.clientY; } });
 const ptrUp = () => { if (!ptr.down) return; ptr.down = false; if (!hands.length && mode === "swarm") release(0, ptr.x, ptr.y, ptr.vx, ptr.vy, Math.min(W, H) * 0.06, ptr.charge, 900); };
 addEventListener("pointerup", ptrUp); addEventListener("pointercancel", ptrUp);
 $("say").onsubmit = e => { e.preventDefault(); showWord($("word").value); $("word").blur(); };

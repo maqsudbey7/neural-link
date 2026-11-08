@@ -13,7 +13,7 @@
 | 👏 | ikki qo'l bilan qarsak — butun ekran bo'ylab kamalak zarba to'lqini | clap — a rainbow shockwave across the screen |
 | ✨ | barmoq tez harakatlansa — orqasidan nurli iz qoladi | fast fingers leave glowing light trails |
 | 👆 | kamera bo'lmasa: ekranga bosib torting, qo'yib yuboring | no camera: press and drag on the screen, then release |
-| 🫧 | O'yin → Pufaklar: kaftdan pufaklar chiqadi, barmoq bilan yoring (hisoblagich bor) | Play → Bubbles: bubbles rise from your palm, pop them (with a counter) |
+| ⚡ | O'yin → Zaryad: kaftni ochib ushlang — nur kaftga so'riladi (0→100% ZARYADLANDI, uzoqroq — MEGA), musht qiling — katta portlash, ekran silkinadi; MEGA dan keyin syurpriz rasm (🦄 🚀 🐼 …) | Play → Charge: hold an open palm to charge (100% → CHARGED, longer → MEGA), make a fist to blast; MEGA reveals a surprise picture |
 | 🫶 | yurak qiling — "SEVGI"; 🤝 ikki kishi kaftlarini yaqinlashtirsa ham yurak chiqadi | make a heart; two people bringing palms together also makes one |
 | ✍️ | so'z yozing (`coffee`, `sevgi`, `yulduz`…) — nurlar o'sha narsaga aylanadi; ✊ musht — tarqaladi | type a word — the light becomes it; fist scatters it |
 | ✦ | Shakl menyusi: 3D shakllar, qo'l bilan aylantiring va kattalashtiring | Shape menu: 3D shapes you rotate and resize by hand |
