@@ -17,7 +17,7 @@
 | ✊ | musht — so'z tarqab ketadi | fist — the word scatters |
 | 🌀 | shakl tanlang (Shar, Kub, Yulduz, DNK, Halqa, Galaktika) — kaft ustida 3D shakl; bilak bilan aylantiring, 🤏 bilan kattalashtiring, ikki qo'l bilan cho'zing | pick a shape — a 3D particle shape above your palm; twist to rotate, pinch to resize, two hands to stretch |
 
-O'ng menyu: nafas · o'yin (erkin / pufaklar / ko'l) · shakl · rang (6 ta yumshoq palitra) · fon (tungi osmon / kamera) · qo'l skeleti · surat · video · ⋯ (ovoz, til, qo'l skeleti, yengil rejim, kamera). Yengil rejim kuchsiz telefonlarda zarrachalarni kamaytiradi va sekin ishlasa o'zi yoqiladi. Surat va videolarda `NEURAL LINK · sayt` belgisi bor, telefonda **↗ ULASHISH** tugmasi chiqadi.
+O'ng menyu: nafas · o'yin (erkin / pufaklar / ko'l) · shakl · rang (6 ta yumshoq palitra) · fon (tungi osmon / kamera) · surat · video · ⋯ (ovoz, til, qo'l skeleti, yengil rejim, kamera). Yengil rejim kuchsiz telefonlarda zarrachalarni kamaytiradi va sekin ishlasa o'zi yoqiladi. Surat va videolarda `NEURAL LINK · sayt` belgisi bor, telefonda **↗ ULASHISH** tugmasi chiqadi.
 
 Ekranda xato chiqsa, uning matni yuqorida qizil oynada ko'rinadi.
 
