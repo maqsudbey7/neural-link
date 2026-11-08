@@ -1,5 +1,5 @@
 // Neural Link — service worker: sahifa, kutubxonalar va modellarni keshlab, keyingi ochilishni tezlashtiradi.
-const CACHE = "neural-link-v11";
+const CACHE = "neural-link-v12";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"];
 const CDN = /(^|\.)cdn\.jsdelivr\.net$|^storage\.googleapis\.com$|^fonts\.(googleapis|gstatic)\.com$/;
 

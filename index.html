@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#070a18">
-<meta name="description" content="Neural Link — thousands of glowing particles follow your hand, turn into a heart when you make one, and become any word you type. Zarrachalar qo'lingizga ergashadi.">
+<meta name="description" content="Neural Link — a calming fidget toy: your hand turns into light, pinch to gather, let go to burst, pop bubbles. Qo'lingiz nurga aylanadi.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -104,10 +104,6 @@
     padding: 11px 22px; border-radius: 999px; background: var(--a); color: #0b1020; font-weight: 800; letter-spacing: 1px; font-size: 13px; cursor: pointer;
     opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
   #share.show { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
-  #breathTxt { position: fixed; z-index: 6; left: 0; right: 0; top: max(64px, calc(env(safe-area-inset-top) + 54px)); text-align: center; pointer-events: none; opacity: 0; transition: opacity .8s; }
-  #breathTxt.show { opacity: 1; }
-  #breathTxt b { display: block; font-size: clamp(22px, 5vw, 30px); font-weight: 700; letter-spacing: -.3px; color: #fff; text-shadow: 0 2px 24px rgba(143,180,255,.5); transition: opacity .5s; }
-  #breathTxt span { display: block; margin-top: 4px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
   #err { position: fixed; z-index: 40; left: 12px; right: 12px; top: max(12px, env(safe-area-inset-top)); padding: 12px 14px; border-radius: 14px; background: rgba(60,0,10,.92);
     border: 1px solid rgba(255,80,100,.5); color: #ffd6dc; font-size: 12px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; display: none; }
   #err.show { display: block; }
@@ -159,11 +155,9 @@
 <canvas id="hud"></canvas>
 <div class="vig"></div>
 <div id="flash"></div>
-<div id="breathTxt"><b id="bPhase"></b><span id="bCount"></span></div>
 <div id="err"></div>
 
 <nav id="rail" class="glass ui" aria-label="Menu">
-  <button class="rb" id="rBreath"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.5" opacity=".55"/><circle cx="12" cy="12" r="10.5" opacity=".25"/></svg></button>
   <button class="rb" id="rPlay"><span class="glyph" id="actGlyph">✋</span></button>
   <button class="rb" id="rShape"><span class="glyph" id="shapeGlyph">✦</span></button>
   <button class="rb" id="rColor"><span class="sw"></span></button>
@@ -197,8 +191,7 @@
   <canvas id="rain"></canvas>
   <div class="card glass">
     <div class="langsw"><button data-l="uz">O'ZBEKCHA</button><button data-l="en">ENGLISH</button></div>
-<div class="orb"></div>
-    <h1 class="title">Neural Link</h1>
+<h1 class="title">Neural Link</h1>
     <p class="tagline" data-i="tagline"></p>
     <div class="tips" id="tips"></div>
     <button id="go" data-i="start"></button>
@@ -240,36 +233,38 @@ const store = { get(k) { try { return localStorage.getItem(k); } catch { return 
 // ============================================================
 const I18N = {
   uz: {
-    tagline: "Tinchlantiruvchi nur zarrachalari. Qo'lingizni sekin harakatlantiring, nafas mashqini qiling, sevimli so'zingizni yozing.",
-    tips: [["✋", "qo'lni sekin harakatlantiring — nurlar ergashadi"], ["🌬️", "nafas mashqi — shar bilan birga nafas oling"], ["🫶", "yurak qiling yoki so'z yozing"]],
-    start: "BOSHLASH", loading: "YUKLANMOQDA…", foot: "qurilmangizda ishlaydi · video hech qayerga yuborilmaydi",
+    tagline: "Qo'lingiz minglab nurga aylanadi. Chimdib to'plang, qo'yib yuboring — portlaydi. Pufaklarni yoring, yurak yasang. Bolalar uchun ham, kattalar uchun ham tinchlantiruvchi fidget o'yinchoq.",
+    tips: [["✋", "qo'lingiz nurga aylanadi"], ["🤏", "chimdib to'plang, qo'yib yuboring"], ["🫧", "pufaklarni yoring"]],
+    start: "BOSHLASH", loading: "YUKLANMOQDA…", foot: "qurilmangizda ishlaydi · video hech qayerga yuborilmaydi · kamerasiz ham ekranga tegib o'ynash mumkin",
     sCam: "Kamera ochilmoqda…", sModel: "Qo'l kuzatuvi yuklanmoqda…", denied: "Kameraga ruxsat berilmadi. Brauzer sozlamalaridan kameraga ruxsat bering va sahifani yangilang.",
     insecure: "Kamera faqat https manzilda ishlaydi.", noCam: "Kamera topilmadi.", error: "Xatolik",
     placeholder: "So'z yozing: coffee, sevgi, yulduz…", snd: "Ovoz", lang: "Til", cam: "Kamerani almashtirish", share: "ULASHISH", on: "YONIQ", off: "O'CHIQ",
-    t: { hand: "✋ Qo'lingizni kameraga ko'rsating", move: "✋ Qo'lni sekin harakatlantiring — nurlar ergashadi", open: "🖐 Kaftni oching yoki musht qiling — nurlar yoyiladi yoki to'planadi", breath: "🌬️ O'ngdagi ◎ tugmasi — nafas mashqi", duo: "🤝 Ikki kishi bo'lib o'ynang: har biringiz bitta qo'l ko'rsating va qo'llarni yaqinlashtiring",
-      bubble: "🫧 Kaftni oching — pufaklar chiqadi · barmoq bilan tegib yoring", water: "🌊 Qo'lni suv ustidan sekin o'tkazing — to'lqinlar tarqaladi",
-      heart: "🫶 Ikki qo'l bilan (yoki 🫰 barmoq bilan) yurak qiling", word: "✍️ Pastga so'z yozing — zarrachalar o'shanga aylanadi", fist: "✊ Musht qiling — so'z tarqaladi",
-      shape: "✦ O'ngdagi menyudan shakl tanlang — keyin uni qo'l bilan boshqaring", ctl: "🤏 Barmoqni yozing — kattalashadi · 🔄 bilakni buring — aylanadi · 🙌 ikki qo'l — cho'zing" },
-    live: "JONLI", love: "SEVGI",
-    shapes: ["Erkin", "Shar", "Kub", "Yulduz", "DNK", "Halqa", "Galaktika"], bgCam: "Fon: kamera", bgBlack: "Fon: tungi osmon", breathT: "Nafas mashqi", playT: "O'yin", liteT: "Yengil rejim",
-    acts: [["✋", "Erkin", "nurlar qo'lga ergashadi"], ["🫧", "Pufaklar", "kaftni oching, barmoq bilan yoring"], ["🌊", "Ko'l", "suv ustidan qo'lni o'tkazing"]],
-    bIn: "Nafas oling", bHold: "Ushlab turing", bOut: "Sekin chiqaring", bRest: "Dam oling", shapeT: "Shakl", colorT: "Rang", skelT: "Qo'l skeleti", shotT: "Surat", recT: "Video",
+    t: { hand: "✋ Qo'lingizni kameraga ko'rsating — yoki ekranga tegib torting", pinch: "🤏 Bosh va ko'rsatkich barmoqni qisib nur to'plang… keyin qo'yib yuboring!",
+      duo: "🤝 Ikki kishi bo'lib o'ynang: har biringiz bitta qo'l ko'rsating va kaftlarni yaqinlashtiring", play: "🫧 O'ngdagi ✋ tugmasi → Pufaklar",
+      bubble: "🫧 Kaftni oching — pufaklar chiqadi · barmoq bilan tegib yoring",
+      heart: "🫶 Ikki qo'l bilan (yoki 🫰 barmoq bilan) yurak qiling", word: "✍️ Pastga so'z yozing — nurlar o'shanga aylanadi", fist: "✊ Musht qiling — so'z tarqaladi",
+      shape: "✦ O'ngdagi ✦ menyudan shakl tanlang — keyin uni qo'l bilan boshqaring", ctl: "🤏 Barmoqni yozing — kattalashadi · 🔄 bilakni buring — aylanadi · 🙌 ikki qo'l — cho'zing" },
+    love: "SEVGI", pops: "yorildi",
+    shapes: ["Erkin", "Shar", "Kub", "Yulduz", "DNK", "Halqa", "Galaktika"], bgCam: "Fon: kamera", bgBlack: "Fon: tungi osmon", playT: "O'yin", liteT: "Yengil rejim",
+    acts: [["✋", "Nur qo'l", "chimdib to'plang, qo'yib yuboring"], ["🫧", "Pufaklar", "kaftni oching, barmoq bilan yoring"]],
+    shapeT: "Shakl", colorT: "Rang", skelT: "Qo'l skeleti", shotT: "Surat", recT: "Video",
   },
   en: {
-    tagline: "Calming particles of light. Move your hand slowly, breathe along with the glow, or type a favourite word.",
-    tips: [["✋", "move your hand slowly — the light follows"], ["🌬️", "breathing — breathe with the glowing ball"], ["🫶", "make a heart or type a word"]],
-    start: "START", loading: "LOADING…", foot: "runs on your device · video never leaves it",
+    tagline: "Your hand turns into thousands of lights. Pinch to gather, let go to burst. Pop bubbles, make a heart. A calming fidget toy for kids and grown-ups.",
+    tips: [["✋", "your hand becomes light"], ["🤏", "pinch to gather, let go"], ["🫧", "pop the bubbles"]],
+    start: "START", loading: "LOADING…", foot: "runs on your device · video never leaves it · no camera? touch the screen to play",
     sCam: "Opening camera…", sModel: "Loading hand tracking…", denied: "Camera access was denied. Allow the camera in your browser settings and reload.",
     insecure: "The camera only works over https.", noCam: "No camera found.", error: "Error",
     placeholder: "Type a word: coffee, love, star…", snd: "Sound", lang: "Language", cam: "Switch camera", share: "SHARE", on: "ON", off: "OFF",
-    t: { hand: "✋ Show your hand to the camera", move: "✋ Move your hand slowly — the light follows", open: "🖐 Open your palm or make a fist — they spread or gather", breath: "🌬️ Tap ◎ on the right — breathing exercise", duo: "🤝 Play together: each person shows one hand — then bring your hands close",
-      bubble: "🫧 Open your palm — bubbles float up · touch them to pop", water: "🌊 Glide your hand slowly over the water — ripples spread",
-      heart: "🫶 Make a heart with two hands (or 🫰 with your fingers)", word: "✍️ Type a word below — the particles become it", fist: "✊ Make a fist — the word scatters",
-      shape: "✦ Pick a shape from the right menu — then control it with your hand", ctl: "🤏 Spread fingers — bigger · 🔄 twist wrist — rotate · 🙌 two hands — stretch" },
-    live: "LIVE", love: "LOVE",
-    shapes: ["Free", "Sphere", "Cube", "Star", "DNA", "Ring", "Galaxy"], bgCam: "Background: camera", bgBlack: "Background: night sky", breathT: "Breathing", playT: "Play", liteT: "Light mode",
-    acts: [["✋", "Free", "the light follows your hand"], ["🫧", "Bubbles", "open your palm, pop with a finger"], ["🌊", "Lake", "glide your hand over the water"]],
-    bIn: "Breathe in", bHold: "Hold", bOut: "Breathe out slowly", bRest: "Rest", shapeT: "Shape", colorT: "Color", skelT: "Hand skeleton", shotT: "Photo", recT: "Video",
+    t: { hand: "✋ Show your hand to the camera — or drag on the screen", pinch: "🤏 Pinch thumb and index to gather the light… then let go!",
+      duo: "🤝 Play together: each person shows one hand — then bring your palms close", play: "🫧 Tap ✋ on the right → Bubbles",
+      bubble: "🫧 Open your palm — bubbles float up · touch them to pop",
+      heart: "🫶 Make a heart with two hands (or 🫰 with your fingers)", word: "✍️ Type a word below — the light becomes it", fist: "✊ Make a fist — the word scatters",
+      shape: "✦ Pick a shape from the ✦ menu — then control it with your hand", ctl: "🤏 Spread fingers — bigger · 🔄 twist wrist — rotate · 🙌 two hands — stretch" },
+    love: "LOVE", pops: "popped",
+    shapes: ["Free", "Sphere", "Cube", "Star", "DNA", "Ring", "Galaxy"], bgCam: "Background: camera", bgBlack: "Background: night sky", playT: "Play", liteT: "Light mode",
+    acts: [["✋", "Light hand", "pinch to gather, let go"], ["🫧", "Bubbles", "open your palm, pop with a finger"]],
+    shapeT: "Shape", colorT: "Color", skelT: "Hand skeleton", shotT: "Photo", recT: "Video",
   },
 };
 let lang = store.get("nl-lang") || (/^en/i.test(navigator.language || "") ? "en" : "uz");
@@ -368,9 +363,9 @@ function findEmoji(text) {
 // tinch ranglar: aurora, lavanda, okean, shaftoli, sakura, oy nuri
 const PALETTES = [["#8ff0d6", "#8fb4ff"], ["#c3b2ff", "#8fd8ff"], ["#6fd8ff", "#5f86ff"], ["#ffc9a0", "#ff9fb8"], ["#ffbfdc", "#c7b8ff"], ["#f0f6ff", "#a9cbff"]];
 const S = { color: clamp(parseInt(store.get("nl-color") ?? "0", 10) || 0, 0, PALETTES.length - 1), skel: store.get("nl-skel") === "1", sound: store.get("nl-snd") !== "0",
-  shape: clamp(parseInt(store.get("nl-pshape") ?? "0", 10) || 0, 0, 6), black: store.get("nl-black") !== "0", breath: false,
-  act: clamp(parseInt(store.get("nl-act") ?? "0", 10) || 0, 0, 2), lite: store.get("nl-lite") === "1" };
-const ACT_GLYPH = ["✋", "🫧", "🌊"];
+  shape: clamp(parseInt(store.get("nl-pshape") ?? "0", 10) || 0, 0, 6), black: store.get("nl-black") !== "0",
+  act: clamp(parseInt(store.get("nl-act") ?? "0", 10) || 0, 0, 1), lite: store.get("nl-lite") === "1" };
+const ACT_GLYPH = ["✋", "🫧"];
 const SHAPE_GLYPH = ["✦", "●", "■", "★", "🧬", "◯", "🌀"];
 let learned = {}; try { learned = JSON.parse(store.get("nl-learned2") || "{}") || {}; } catch {}
 function learn(k) { if (learned[k]) return; learned[k] = 1; store.set("nl-learned2", JSON.stringify(learned)); }
@@ -511,8 +506,7 @@ const SND = {
   form: () => [392, 494, 587].forEach((f, i) => tone(f, 1.6, 0.035, i * 0.12)),
   love: () => [392, 494, 587, 784].forEach((f, i) => tone(f, 2.2, 0.035, i * 0.16)),
   scatter: () => tone(220, 1.0, 0.03),
-  bIn: () => { tone(294, 3.5, 0.03); tone(440, 3.5, 0.015, 0.2); },
-  bOut: () => { tone(220, 5, 0.03); tone(330, 5, 0.015, 0.2); },
+  burst: p => { tone(180 + p * 120, 0.9, 0.04); [784, 988, 1175].forEach((f, i) => tone(f, 0.8, 0.012 + p * 0.012, 0.03 + i * 0.05)); },
 };
 // juda past ovozli tinch fon (ovoz yoqilganda)
 let pad = null;
@@ -583,7 +577,6 @@ function resize() {
   renderer.setPixelRatio(pr); renderer.setSize(W, H, false);
   camera.right = W; camera.bottom = H; camera.updateProjectionMatrix();
   geo.setDrawRange(0, NA);
-  if (mode === "water") genWater();
   points.material.uniforms.uPr.value = pr;
 }
 addEventListener("resize", resize);
@@ -599,7 +592,6 @@ function applyPalette(instant = false) {
   PAL = [hex(PALETTES[S.color][0]), hex(PALETTES[S.color][1])];
   document.documentElement.style.setProperty("--a", PALETTES[S.color][0]); document.documentElement.style.setProperty("--a2", PALETTES[S.color][1]);
   if (mode === "shape") genShape(S.shape);
-  if (mode === "water") genWater();
   if (mode === "swarm") for (let i = 0; i < N; i++) { const c = swarmColor(i); P.tr[i] = c[0]; P.tg[i] = c[1]; P.tb[i] = c[2]; if (instant) { P.cr[i] = c[0]; P.cg[i] = c[1]; P.cb[i] = c[2]; } }
 }
 
@@ -633,52 +625,15 @@ function genShape(id) {
 }
 const shp = { cx: innerWidth / 2, cy: innerHeight * 0.45, scale: 160, yaw: 0, pitch: 0.35, roll: 0, zoom: 1, tcx: innerWidth / 2, tcy: innerHeight * 0.45, tscale: 160,
   tyaw: 0, tpitch: 0.35, troll: 0, spin: 0, zMin: 9, zMax: 0 };
-function baseMode() { return S.breath ? ["breath", null] : wordForm ? ["form", wordForm] : S.act === 2 ? ["water", null] : S.shape > 0 ? ["shape", null] : ["swarm", null]; }
-// 🌊 ko'l: zarrachalar ekran bo'ylab tekis suv yuzasi bo'lib turadi
-function genWater() {
-  const cols = Math.max(8, Math.round(Math.sqrt(NA * W / H))), rows = Math.ceil(NA / cols), gx = W / cols, gy = H / rows;
-  for (let i = 0; i < N; i++) {
-    const c = i % cols, r = Math.floor(i / cols) % rows;
-    P.sx[i] = (c + 0.5 + (Math.random() - .5) * 0.5) * gx; P.sy[i] = (r + 0.5 + (Math.random() - .5) * 0.5) * gy;
-    const u = P.sy[i] / H, a = PAL[0], b = PAL[1], br = 0.45 + 0.4 * Math.random();
-    P.tr[i] = (b[0] + (a[0] - b[0]) * u) * br; P.tg[i] = (b[1] + (a[1] - b[1]) * u) * br; P.tb[i] = (b[2] + (a[2] - b[2]) * u) * br;
-  }
-}
-const ripples = [];
-let lastPlop = 0;
-const PENTA = [392, 440, 523, 587, 659, 784, 880];
-function plop(x, y, a = 1) {
-  if (ripples.length > 14) ripples.shift();
-  ripples.push({ x, y, t: clock, a });
-  const now = performance.now();
-  if (now - lastPlop > 220) { lastPlop = now; tone(PENTA[Math.floor((1 - clamp(y / H, 0, 0.999)) * PENTA.length)], 1.4, 0.022 * clamp(a, 0.5, 1.2)); }
-}
+function baseMode() { return wordForm ? ["form", wordForm] : S.shape > 0 ? ["shape", null] : ["swarm", null]; }
 function setAct(i) {
-  S.act = i; store.set("nl-act", i); if (i === 2 && S.shape > 0) { S.shape = 0; store.set("nl-pshape", 0); }
-  if (S.breath) setBreath(false);
+  S.act = i; store.set("nl-act", i);
   bubbles.length = 0;
   if (!(mode === "form" && form)) { const [m, f] = baseMode(); setMode(m, f, true); }
   renderUi(); SND.tap(); buzz(10);
 }
-// 🌬️ nafas mashqi: 4 s nafas olish · 2 s ushlab turish · 6 s chiqarish · 1 s dam
-const BR = [["bIn", 4], ["bHold", 2], ["bOut", 6], ["bRest", 1]], BR_T = 13;
-const br = { t0: 0, phase: -1, v: 0, cx: innerWidth / 2, cy: innerHeight * 0.48 };
-function breathState(now) {
-  let e = ((now - br.t0) / 1000) % BR_T, ph = 0; while (e >= BR[ph][1]) { e -= BR[ph][1]; ph++; }
-  const u = e / BR[ph][1], ease = x => 0.5 - 0.5 * Math.cos(Math.PI * x);
-  const v = ph === 0 ? ease(u) : ph === 1 ? 1 : ph === 2 ? 1 - ease(u) : 0;
-  return { ph, v, left: Math.ceil(BR[ph][1] - e) };
-}
-function setBreath(on) {
-  S.breath = on; br.t0 = performance.now(); br.phase = -1; if (on) learn("breath");
-  $("breathTxt").classList.toggle("show", on); $("rBreath").classList.toggle("on", on);
-  if (on || !(mode === "form" && form && form.kind === "heart")) { const [m, f] = baseMode(); setMode(m, f, true); }
-  SND.tap(); buzz(10);
-}
 function setShape(i) {
   S.shape = i; store.set("nl-pshape", i); if (i > 0) learn("shape");
-  if (i > 0 && S.act === 2) { S.act = 0; store.set("nl-act", 0); }
-  if (S.breath && i > 0) { setBreath(false); }
   if (!(mode === "form" && form)) { const [m, f] = baseMode(); setMode(m, f, true); }
   renderUi(); SND.tap(); buzz(10);
 }
@@ -741,8 +696,7 @@ function assign(f) {
 function setMode(m, f = null, force = false) {
   if (!force && m === mode && f === form) return;
   mode = m; form = f;
-  if (f) assign(f); else if (m === "shape") genShape(S.shape); else if (m === "water") genWater(); else applyPalette();
-  if (m === "breath") return;   // nafas rejimi sekin, sakrashsiz boshlanadi
+  if (f) assign(f); else if (m === "shape") genShape(S.shape); else applyPalette();
   for (let i = 0; i < N; i++) { const a = Math.random() * TAU, v = 30 + Math.random() * 110; P.vx[i] += Math.cos(a) * v; P.vy[i] += Math.sin(a) * v; }
 }
 function showWord(text) {
@@ -750,7 +704,6 @@ function showWord(text) {
   if (!text) { clearWord(); return; }
   wordForm = buildWord(text);
   if (!wordForm.pts.length) { wordForm = null; return; }
-  if (S.breath) setBreath(false);
   if (Date.now() > heartUntil) setMode("form", wordForm);
   $("clear").hidden = false; SND.form(); buzz(15); learn("word");
 }
@@ -874,9 +827,19 @@ function render(now) {
   // yurak tugagach — so'z yoki ergashishga qaytish
   if (mode === "form" && form && form.kind === "heart" && Date.now() > heartUntil) { const [m, f] = baseMode(); setMode(m, f); }
 
-  // langarlar: har bir qo'lning ko'rsatkich barmog'i uchi
-  const anchors = hands.map(h => ({ x: h.lm[8].x * 0.6 + palmOf(h.lm).x * 0.4, y: h.lm[8].y * 0.6 + palmOf(h.lm).y * 0.4, R: h.len * (0.35 + 1.25 * (openF[h.k].x ?? 0.6)) }));
-  if (anchors.length) { if (lastAnchor) moved += Math.hypot(anchors[0].x - lastAnchor.x, anchors[0].y - lastAnchor.y); lastAnchor = { x: anchors[0].x, y: anchors[0].y }; if (moved > Math.min(W, H) * 1.5) learn("move"); }
+  // 🤏 chimdish: bosh va ko'rsatkich barmoq qisilsa nur to'planadi, qo'yib yuborilsa portlaydi
+  const grabs = [null, null];
+  for (const h of hands) {
+    const pd = d2(h.lm[4], h.lm[8]) / h.len, st = pinchSt[h.k];
+    const was = st.on; st.on = mode === "swarm" && (st.on ? pd < 0.45 : pd < 0.3);
+    const gx = (h.lm[4].x + h.lm[8].x) / 2, gy = (h.lm[4].y + h.lm[8].y) / 2;
+    if (st.on && !was) { st.since = now; tone(330, 0.5, 0.02); }
+    if (st.on) { st.x = gx; st.y = gy; st.charge = Math.min(1, (now - st.since) / 1400); grabs[h.k] = { x: gx, y: gy, R: h.len * (0.16 + 0.14 * st.charge), c: st.charge }; }
+    if (!st.on && was && mode === "swarm") doBurst(st.x, st.y, h.len * 0.5, st.charge);
+  }
+  for (let k = hands.length; k < 2; k++) pinchSt[k].on = false;
+  // kamerasiz: ekranga tegib torting — nur barmoq ostida to'planadi
+  if (ptr.down && !hands.length && mode === "swarm") { const c = Math.min(1, (now - ptr.since) / 1400); grabs[0] = { x: ptr.x, y: ptr.y, R: Math.min(W, H) * (0.05 + 0.04 * c), c }; ptr.charge = c; }
   idle.x = W / 2 + Math.sin(clock * 0.31) * W * 0.18; idle.y = H * 0.45 + Math.sin(clock * 0.43) * H * 0.12;
 
   // shakl markazi
@@ -903,14 +866,6 @@ function render(now) {
   }
 
   // shakl holati (silliq)
-  if (S.breath) {
-    const b = breathState(now);
-    if (b.ph !== br.phase) { br.phase = b.ph; $("bPhase").textContent = t(BR[b.ph][0]); if (b.ph === 0) { SND.bIn(); buzz(8); } else if (b.ph === 2) SND.bOut(); }
-    $("bCount").textContent = b.left;
-    br.v = b.v;
-    const tx0 = hands.length ? palmOf(hands[0].lm).x : W / 2, ty0 = hands.length ? palmOf(hands[0].lm).y - hands[0].len * 0.6 : H * 0.5, e = 1 - Math.exp(-2.5 * dt);
-    br.cx += (clamp(tx0, W * 0.2, W * 0.8) - br.cx) * e; br.cy += (clamp(ty0, H * 0.32, H * 0.68) - br.cy) * e;
-  }
   if (mode === "shape") {
     const noHand = !hands.length, e = 1 - Math.exp(-10 * dt);
     if (noHand) { shp.tcx = W / 2; shp.tcy = H * 0.45; shp.tscale = Math.min(W, H) * 0.24; shp.tyaw = 0; shp.troll = 0; shp.tpitch = 0.35; }
@@ -920,15 +875,6 @@ function render(now) {
   }
   const Y = shp.yaw + shp.spin, cyw = Math.cos(Y), syw = Math.sin(Y), cpt = Math.cos(shp.pitch), spt = Math.sin(shp.pitch), crl = Math.cos(shp.roll), srl = Math.sin(shp.roll);
 
-  // 🌊 qo'l suv ustidan o'tsa — to'lqin
-  if (mode === "water") {
-    for (const h of hands) { const p = h.lm[8], q = waterLast[h.k];
-      if (!q) waterLast[h.k] = { x: p.x, y: p.y, t: now };
-      else { const d = Math.hypot(p.x - q.x, p.y - q.y); if (d > 40 && now - q.t > 80) { plop(p.x, p.y, clamp(d / ((now - q.t) * 0.5), 0.4, 1.3)); learn("water"); q.x = p.x; q.y = p.y; q.t = now; } } }
-    if (!hands.length) waterLast.length = 0;
-    if (!hands.length && clock - (ripples.at(-1)?.t ?? -9) > 3.5) plop(W * (0.2 + Math.random() * 0.6), H * (0.25 + Math.random() * 0.5), 0.5);
-  }
-  for (let i = ripples.length - 1; i >= 0; i--) if (clock - ripples[i].t > 4) ripples.splice(i, 1);
   updateBubbles(now, dt);
   // sekin qurilma: dastlabki 6 soniyada kadr tezligi past bo'lsa — yengil rejim o'zi yoqiladi
   if (!S.lite && store.get("nl-lite") === null && clock > 2 && clock < 8) { perf.n++; perf.s += dt; if (perf.n === 150 && perf.s / perf.n > 0.034) setLite(true); }
@@ -945,20 +891,7 @@ function render(now) {
   for (let i = 0; i < NA; i++) {
     let tx, ty, k, damp;
     let depth = 1;
-    if (mode === "water") {
-      const gx = P.sx[i], gy = P.sy[i]; let dx = 0, dy = 0, glow = 0;
-      for (const rp of ripples) {
-        const age = clock - rp.t, ex = gx - rp.x, ey = gy - rp.y, d = Math.hypot(ex, ey) + 0.001, front = age * 200, q = (d - front) / 30;
-        if (q > -3 && q < 3) { const w = Math.exp(-q * q) * Math.sin(q * 2.2) * rp.a * Math.exp(-age * 0.85); dx += ex / d * w * 13; dy += ey / d * w * 13; glow += Math.abs(w); }
-      }
-      dy += Math.sin(gx * 0.011 + clock * 0.7) * Math.sin(gy * 0.009 + clock * 0.5) * 3;
-      tx = gx + dx; ty = gy + dy; k = 40; damp = 10; depth = 0.8 + Math.min(1.2, glow) * 1.3;
-    } else if (mode === "breath") {
-      const Rb = Math.min(W, H) * (0.09 + 0.2 * br.v), rr = Math.sqrt(P.base[i]), ang = P.ang[i] + clock * 0.06 * P.spd[i];
-      const wob = 1 + 0.03 * Math.sin(clock * 0.9 + P.seed[i]);
-      tx = br.cx + Math.cos(ang) * rr * Rb * wob; ty = br.cy + Math.sin(ang) * rr * Rb * wob;
-      k = 10 + P.k[i]; damp = 6; depth = 0.55 + 0.45 * (1 - rr * 0.6) * (0.7 + 0.3 * br.v);
-    } else if (mode === "shape") {
+    if (mode === "shape") {
       const x0 = P.sx[i], y0 = P.sy[i], z0 = P.sz[i];
       const x1 = x0 * cyw + z0 * syw, z1 = -x0 * syw + z0 * cyw;
       const y2 = y0 * cpt - z1 * spt, z2 = y0 * spt + z1 * cpt;
@@ -970,10 +903,27 @@ function render(now) {
       tx = formCenter.x + P.fx[i] * sc * beat + j; ty = formCenter.y + P.fy[i] * sc * beat + Math.cos(clock * 1.0 + P.seed[i]) * 1.2;
       k = 26 + P.k[i]; damp = 9;
     } else {
-      const a = anchors.length ? anchors[P.hand[i] % anchors.length] : { x: idle.x, y: idle.y, R: Math.min(W, H) * 0.22 };
-      const ang = P.ang[i] + clock * P.spd[i], r = P.rad[i] * a.R * (1 + 0.15 * Math.sin(clock * 1.7 + P.seed[i]));
-      tx = a.x + Math.cos(ang) * r + Math.sin(P.y[i] * 0.01 + clock * 0.6) * 12; ty = a.y + Math.sin(ang) * r * 0.85 + Math.cos(P.x[i] * 0.01 + clock * 0.5) * 12;
-      k = P.k[i]; damp = 2.4 + P.k[i] * 0.16;
+      const hi = hands.length === 2 ? (P.hand[i] & 1) : 0, h = hands[hi], g = h ? grabs[h.k] : grabs[0];
+      if (g) {
+        // to'plangan nur shari — aylanib turadi, ushlab turilgan sari kattalashadi va yorqinlashadi
+        const ang = P.ang[i] + clock * P.spd[i] * 4, r = P.rad[i] * g.R * (0.3 + 0.7 * P.base[i]) * (1 + 0.06 * Math.sin(clock * 9 + P.seed[i]));
+        tx = g.x + Math.cos(ang) * r; ty = g.y + Math.sin(ang) * r; k = 110; damp = 15; depth = 1.15 + g.c * 0.7;
+      } else if (h && (i % 10) < 8) {
+        // ✋ nur qo'l: zarrachalar qo'lning suyaklari bo'ylab yopishadi — kechikmaydi
+        const bi = (i >> 1) % 25, tt = P.seed[i] % 1, L = h.lm;
+        let bx, by;
+        if (bi < 21) { const [a, b] = HC[bi]; bx = L[a].x + (L[b].x - L[a].x) * tt; by = L[a].y + (L[b].y - L[a].y) * tt; }
+        else { const u = tt, v = (P.seed[i] * 7.31) % 1, ax = L[0].x + (L[9].x - L[0].x) * u, ay = L[0].y + (L[9].y - L[0].y) * u, sx = L[5].x - L[17].x, sy = L[5].y - L[17].y;
+          bx = ax + sx * (v - 0.5) * 0.9; by = ay + sy * (v - 0.5) * 0.9; }
+        const ang = P.ang[i] + clock * P.spd[i] * 0.8, off = P.rad[i] * h.len * 0.085;
+        tx = bx + Math.cos(ang) * off; ty = by + Math.sin(ang) * off; k = 130; damp = 17;
+      } else {
+        // atrofdagi yumshoq chang (qo'l yo'q bo'lsa — ekranda sekin suzadi)
+        const a = h ? { x: palmOf(h.lm).x, y: palmOf(h.lm).y - h.len * 0.3, R: h.len * 1.5 } : { x: idle.x, y: idle.y, R: Math.min(W, H) * 0.22 };
+        const ang = P.ang[i] + clock * P.spd[i], r = P.rad[i] * a.R * (1 + 0.15 * Math.sin(clock * 1.7 + P.seed[i]));
+        tx = a.x + Math.cos(ang) * r + Math.sin(P.y[i] * 0.01 + clock * 0.6) * 12; ty = a.y + Math.sin(ang) * r * 0.85 + Math.cos(P.x[i] * 0.01 + clock * 0.5) * 12;
+        k = h ? 14 + P.k[i] * 2 : P.k[i]; damp = h ? 6 : 2.4 + P.k[i] * 0.16;
+      }
       if (duo) { const hc = DUO[P.hand[i] & 1], m = duoMix * 0.85, bb = 0.55 + 0.45 * ((P.seed[i] * 7.3) % 1);
         P.tr[i] = (hc[0] + (DUO[2][0] - hc[0]) * m) * bb; P.tg[i] = (hc[1] + (DUO[2][1] - hc[1]) * m) * bb; P.tb[i] = (hc[2] + (DUO[2][2] - hc[2]) * m) * bb; }
     }
@@ -984,7 +934,7 @@ function render(now) {
     pa[i*3] = P.x[i]; pa[i*3+1] = P.y[i];
     const tw = mode === "form" ? 0.88 + 0.12 * Math.sin(clock * 1.6 + P.seed[i]) : 0.72 + 0.28 * Math.sin(clock * 1.1 + P.seed[i]);
     ca[i*3] = (P.cr[i] * tw + sp * 0.3) * depth; ca[i*3+1] = (P.cg[i] * tw + sp * 0.3) * depth; ca[i*3+2] = (P.cb[i] * tw + sp * 0.3) * depth;
-    sa[i] = mode === "water" ? sizeBase * (0.75 + Math.min(0.6, depth - 0.55)) : (mode === "form" ? sizeBase * 0.95 : mode === "shape" ? sizeBase * (0.7 + 0.5 * depth) : sizeBase * (0.6 + P.base[i] * 0.9)) * (form && form.kind === "heart" ? beat : 1);
+    sa[i] = (mode === "form" ? sizeBase * 0.95 : mode === "shape" ? sizeBase * (0.7 + 0.5 * depth) : sizeBase * (0.6 + P.base[i] * 0.9)) * (form && form.kind === "heart" ? beat : 1);
   }
   posAttr.needsUpdate = true; colAttr.needsUpdate = true; sizeAttr.needsUpdate = true;
   renderer.render(scene, camera);
@@ -994,20 +944,32 @@ function render(now) {
   if (rec) recordFrame(now);
 }
 const formCenter = { x: innerWidth / 2, y: innerHeight * 0.42 };
-const waterLast = [], perf = { n: 0, s: 0 };
+const perf = { n: 0, s: 0 };
+const pinchSt = [0, 1].map(() => ({ on: false, since: 0, x: 0, y: 0, charge: 0 }));
+const ptr = { down: false, x: 0, y: 0, since: 0, charge: 0 };
+// 💥 portlash: yaqindagi zarrachalar tashqariga otiladi
+function doBurst(x, y, R, c) {
+  const pow = 0.45 + c * 0.9, R2 = (R * 3 + 60) ** 2;
+  for (let i = 0; i < NA; i++) { const dx = P.x[i] - x, dy = P.y[i] - y, dd = dx * dx + dy * dy; if (dd > R2) continue;
+    const a = Math.atan2(dy, dx) + (Math.random() - .5) * 0.6, v = (350 + Math.random() * 1100) * pow; P.vx[i] += Math.cos(a) * v; P.vy[i] += Math.sin(a) * v; }
+  SND.burst(c); buzz(c > 0.6 ? [15, 30, 25] : 18); learn("pinch");
+  burstFx.push({ x, y, t: 0, r: R, c });
+}
+const burstFx = [];
 let duoWas = false;
 const DUO = [hex("#ffc29a"), hex("#7fc8ff"), hex("#ffb3d9")];   // 1-kishi: shaftoli, 2-kishi: osmon, qo'shilganda: pushti
 
 // ---------------- 🫧 Pufaklar ----------------
 const bubbles = [], sparks = [];
+let popCount = parseInt(store.get("nl-pops") || "0", 10) || 0;
 let lastBubble = 0, lastAutoBubble = 0;
 function popBubble(b) {
-  b.dead = true; const n = 16;
+  b.dead = true; const n = 16; popCount++; if (popCount % 10 === 0) store.set("nl-pops", popCount);
   for (let j = 0; j < n; j++) { const a = j / n * TAU + Math.random() * 0.3, v = 60 + Math.random() * 90; sparks.push({ x: b.x + Math.cos(a) * b.r, y: b.y + Math.sin(a) * b.r, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, c: b.c }); }
   tone(PENTA[(Math.random() * PENTA.length) | 0] * 2, 0.9, 0.025); buzz(8); learn("bubble");
 }
 function updateBubbles(now, dt) {
-  if (S.act !== 1 || S.breath) { bubbles.length = 0; }
+  if (S.act !== 1) { bubbles.length = 0; }
   else {
     // ochiq kaftdan pufak chiqadi
     for (const h of hands) if (h.n >= 3 && now - lastBubble > 520 && bubbles.length < 22) {
@@ -1053,6 +1015,9 @@ function drawHud(now) {
   if (rec) { hud.fillStyle = "#ff6b81"; hud.beginPath(); hud.arc(23, 44 + safeTop(), 3.5, 0, TAU); hud.fill();
     hud.font = `600 11px "Manrope", system-ui, sans-serif`; hud.fillText(`${Math.floor((now - rec.start) / 1000)}s`, 32, 48 + safeTop()); }
   drawBubbles();
+  for (let j = burstFx.length - 1; j >= 0; j--) { const b = burstFx[j]; b.t += 1 / 60; if (b.t > 0.6) { burstFx.splice(j, 1); continue; }
+    hud.globalAlpha = (1 - b.t / 0.6) * (0.35 + b.c * 0.4); hud.strokeStyle = PALETTES[S.color][1]; hud.lineWidth = 2 + b.c * 3; hud.beginPath(); hud.arc(b.x, b.y, b.r * (0.5 + b.t * 6), 0, TAU); hud.stroke(); hud.globalAlpha = 1; }
+  if (S.act === 1 && popCount) { hud.font = `600 12px "Manrope", system-ui, sans-serif`; hud.textAlign = "left"; hud.fillStyle = "rgba(242,245,255,.55)"; hud.fillText(`🫧 ${popCount} ${t("pops")}`, 18, 48 + safeTop()); }
   if (S.skel) for (const h of hands) {
     hud.strokeStyle = "rgba(255,255,255,.16)"; hud.lineWidth = 1.2; hud.beginPath();
     for (const [p, q] of HC) { hud.moveTo(h.lm[p].x, h.lm[p].y); hud.lineTo(h.lm[q].x, h.lm[q].y); } hud.stroke();
@@ -1069,13 +1034,10 @@ const safeTop = () => safeTopPx;
 let tipText = null;
 function updateTip() {
   let k = null;
-  if (S.breath) k = null;
-  else if (!hands.length) k = learned.hand ? (learned.word ? null : "word") : "hand";
-  else if (!learned.move) k = "move";
+  if (!hands.length) k = learned.hand || learned.pinch ? null : "hand";
+  else if (!learned.pinch) k = "pinch";
   else if (S.act === 1 && !learned.bubble) k = "bubble";
-  else if (S.act === 2 && !learned.water) k = "water";
-  else if (!learned.breath) k = "breath";
-  else if (!learned.open) k = "open";
+  else if (!learned.play) k = "play";
   else if (!learned.heart) k = "heart";
   else if (!learned.word) k = "word";
   else if (!learned.duo) k = "duo";
@@ -1150,7 +1112,7 @@ function renderUi() {
   document.body.classList.toggle("blackbg", S.black); $("rBg").classList.toggle("on", S.black);
   $("shapeGlyph").textContent = SHAPE_GLYPH[S.shape]; $("rShape").classList.toggle("on", S.shape > 0);
   $("shapes").innerHTML = t("shapes").map((n, i) => `<button class="sh ${i === S.shape ? "on" : ""}" data-s="${i}"><i>${SHAPE_GLYPH[i]}</i>${n}</button>`).join("");
-  const tips = { rBreath: t("breathT"), rShape: t("shapeT") + ": " + t("shapes")[S.shape], rColor: t("colorT"), rBg: S.black ? t("bgBlack") : t("bgCam"), rPlay: t("playT") + ": " + t("acts")[S.act][1], rShot: t("shotT"), rRec: t("recT") };
+  const tips = { rShape: t("shapeT") + ": " + t("shapes")[S.shape], rColor: t("colorT"), rBg: S.black ? t("bgBlack") : t("bgCam"), rPlay: t("playT") + ": " + t("acts")[S.act][1], rShot: t("shotT"), rRec: t("recT") };
   for (const [id, lbl] of Object.entries(tips)) { $(id).title = lbl; $(id).setAttribute("aria-label", lbl); }
   $("sName").textContent = S.sound ? t("on") : t("off"); $("lName").textContent = lang.toUpperCase();
   tipText = null;
@@ -1159,7 +1121,6 @@ function setLang(l) { lang = l; store.set("nl-lang", l); renderUi(); }
 const toggleMore = force => { const o = force ?? !$("more").classList.contains("open"); $("more").classList.toggle("open", o); $("rMore").setAttribute("aria-expanded", o); if (o) $("shapes").classList.remove("open"); };
 const toggleShapes = force => { const o = force ?? !$("shapes").classList.contains("open"); $("shapes").classList.toggle("open", o); if (o) toggleMore(false); };
 $("rShape").onclick = () => { toggleShapes(); SND.tap(); };
-$("rBreath").onclick = () => setBreath(!S.breath);
 $("shapes").onclick = e => { const b = e.target.closest(".sh"); if (b) { setShape(+b.dataset.s); toggleShapes(false); } };
 $("rBg").onclick = () => { S.black = !S.black; store.set("nl-black", S.black ? "1" : "0"); renderUi(); SND.tap(); };
 $("rColor").onclick = () => { S.color = (S.color + 1) % PALETTES.length; store.set("nl-color", S.color); applyPalette(); if (wordForm && mode === "form" && form.kind === "word") { wordForm = buildWord(wordForm.label); setMode("form", wordForm); } SND.tap(); };
@@ -1172,7 +1133,7 @@ function setLite(on) {
 $("mLite").onclick = () => { setLite(!S.lite); SND.tap(); };
 const toggleActs = force => { const o = force ?? !$("acts").classList.contains("open"); $("acts").classList.toggle("open", o); if (o) { toggleMore(false); toggleShapes(false); } };
 $("rPlay").onclick = () => { toggleActs(); SND.tap(); };
-$("acts").onclick = e => { const b = e.target.closest(".sh"); if (b) { setAct(+b.dataset.a); toggleActs(false); } };
+$("acts").onclick = e => { const b = e.target.closest(".sh"); if (b) { setAct(+b.dataset.a); if (+b.dataset.a) learn("play"); toggleActs(false); } };
 $("rShot").onclick = () => { captureRequested = true; };
 $("rRec").onclick = () => rec ? stopRec() : startRec();
 $("rMore").onclick = () => toggleMore();
@@ -1184,11 +1145,11 @@ addEventListener("pointerdown", e => { if (!e.target.closest("#more, #rMore")) t
   // ekranga tegish: pufakni yorish yoki suvga to'lqin
   if (!document.body.classList.contains("running") || e.target.closest("#rail, #more, #shapes, #acts, #bottom, #share, #err")) return;
   for (const b of bubbles) if (Math.hypot(e.clientX - b.x, e.clientY - b.y) < b.r * 1.1) { popBubble(b); return; }
-  if (mode === "water") { plop(e.clientX, e.clientY, 1); learn("water"); }
+  Object.assign(ptr, { down: true, x: e.clientX, y: e.clientY, since: performance.now(), charge: 0 });
 });
-let lastDragPlop = 0;
-addEventListener("pointermove", e => { if (mode !== "water" || !e.buttons || e.target.closest("#rail, #more, #shapes, #acts, #bottom")) return;
-  const now = performance.now(); if (now - lastDragPlop > 110) { lastDragPlop = now; plop(e.clientX, e.clientY, 0.8); } });
+addEventListener("pointermove", e => { if (ptr.down) { ptr.x = e.clientX; ptr.y = e.clientY; for (const b of bubbles) if (!b.dead && Math.hypot(ptr.x - b.x, ptr.y - b.y) < b.r) popBubble(b); } });
+const ptrUp = () => { if (!ptr.down) return; ptr.down = false; if (!hands.length && mode === "swarm") doBurst(ptr.x, ptr.y, Math.min(W, H) * 0.06, ptr.charge); };
+addEventListener("pointerup", ptrUp); addEventListener("pointercancel", ptrUp);
 $("say").onsubmit = e => { e.preventDefault(); showWord($("word").value); $("word").blur(); };
 $("clear").onclick = () => clearWord(true);
 if (!canRecord) $("rRec").hidden = true;
