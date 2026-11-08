@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#070a18">
 <meta name="description" content="Neural Link — thousands of glowing particles follow your hand, turn into a heart when you make one, and become any word you type. Zarrachalar qo'lingizga ergashadi.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -18,19 +18,19 @@
 <title>Neural Link</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #000;
-    --fg: #eefcf6;
-    --a: #00ff88;
-    --a2: #00e5ff;
-    --muted: rgba(238,252,246,.62);
-    --faint: rgba(238,252,246,.36);
-    --glass: rgba(8,12,12,.55);
+    --fg: #f2f5ff;
+    --a: #8ff0d6;
+    --a2: #8fb4ff;
+    --muted: rgba(242,245,255,.66);
+    --faint: rgba(242,245,255,.4);
+    --glass: rgba(14,18,36,.5);
     --border: rgba(255,255,255,.12);
     --red: #ff3355;
-    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --mono: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #000; } }
   :root[data-theme="dark"] { --bg: #000; }
@@ -40,11 +40,11 @@
   button, input { font: inherit; color: inherit; }
 
   /* kamera to'g'ridan-to'g'ri ko'rinadi (iPhone yashirin videoni to'xtatib qo'yishi mumkin) */
-  #cam { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; object-fit: cover; filter: brightness(.62) saturate(.9); background: #000; }
+  #cam { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; object-fit: cover; filter: brightness(.55) saturate(.75) blur(1px); background: #000; }
   #cam.mirror { transform: scaleX(-1); }
   #fx, #hud { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; pointer-events: none; }
   #fx { mix-blend-mode: screen; }
-  #blackout { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .5s; }
+  #blackout { position: fixed; inset: 0; background: radial-gradient(ellipse 120% 90% at 50% 35%, #141a3a 0%, #0a0d22 45%, #04050d 100%); opacity: 0; pointer-events: none; transition: opacity .5s; }
   body.blackbg #blackout { opacity: 1; }
   .vig { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.55) 100%); }
   #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 30; }
@@ -65,7 +65,7 @@
   .rb svg { width: 21px; height: 21px; }
   .rb.on { color: var(--a); background: rgba(255,255,255,.08); }
   .rb.rec { color: #fff; background: var(--red); }
-  .rb .sw { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, var(--a), var(--a2)); box-shadow: 0 0 12px var(--a); }
+  .rb .sw { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, var(--a), var(--a2)); box-shadow: 0 0 10px rgba(143,180,255,.5); }
   .rb[hidden] { display: none; }
   .rsep { height: 1px; margin: 3px 8px; background: var(--border); }
   #more { position: fixed; z-index: 9; right: calc(max(10px, env(safe-area-inset-right)) + 66px); top: 50%; transform: translate(8px, -50%); padding: 6px; border-radius: 16px;
@@ -94,33 +94,41 @@
   #say input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 16px; color: var(--fg); padding: 8px 0; }
   #say input::placeholder { color: var(--faint); }
   #say button { -webkit-appearance: none; appearance: none; border: 0; cursor: pointer; height: 40px; min-width: 40px; padding: 0 14px; border-radius: 999px;
-    background: var(--a); color: #000; font-weight: 800; font-size: 14px; }
+    background: linear-gradient(135deg, var(--a), var(--a2)); color: #0b1020; font-weight: 800; font-size: 14px; }
   #say button.clear { background: rgba(255,255,255,.1); color: var(--fg); }
   #say button[hidden] { display: none; }
   #share { -webkit-appearance: none; appearance: none; border: 0; position: fixed; z-index: 8; left: 50%; transform: translate(-50%, 8px); top: max(70px, calc(env(safe-area-inset-top) + 60px));
-    padding: 11px 22px; border-radius: 999px; background: var(--a); color: #000; font-weight: 800; letter-spacing: 2px; font-size: 13px; cursor: pointer;
+    padding: 11px 22px; border-radius: 999px; background: var(--a); color: #0b1020; font-weight: 800; letter-spacing: 1px; font-size: 13px; cursor: pointer;
     opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
   #share.show { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+  #breathTxt { position: fixed; z-index: 6; left: 0; right: 0; top: max(64px, calc(env(safe-area-inset-top) + 54px)); text-align: center; pointer-events: none; opacity: 0; transition: opacity .8s; }
+  #breathTxt.show { opacity: 1; }
+  #breathTxt b { display: block; font-size: clamp(22px, 5vw, 30px); font-weight: 700; letter-spacing: -.3px; color: #fff; text-shadow: 0 2px 24px rgba(143,180,255,.5); transition: opacity .5s; }
+  #breathTxt span { display: block; margin-top: 4px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
   #err { position: fixed; z-index: 40; left: 12px; right: 12px; top: max(12px, env(safe-area-inset-top)); padding: 12px 14px; border-radius: 14px; background: rgba(60,0,10,.92);
     border: 1px solid rgba(255,80,100,.5); color: #ffd6dc; font-size: 12px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; display: none; }
   #err.show { display: block; }
 
   /* ---------- Boshlash ekrani ---------- */
-  #boot { position: fixed; inset: 0; z-index: 10; background: #000; display: flex; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  #boot { position: fixed; inset: 0; z-index: 10; background: radial-gradient(ellipse 120% 90% at 50% 30%, #151b3d 0%, #0a0d22 50%, #04050d 100%); display: flex; overflow-y: auto; -webkit-overflow-scrolling: touch;
     padding: max(20px, calc(env(safe-area-inset-top) + 12px)) 16px max(16px, env(safe-area-inset-bottom)); transition: opacity .6s, visibility .6s; }
   body.running #boot { opacity: 0; visibility: hidden; }
-  #rain { position: fixed; inset: 0; width: 100%; height: 100%; opacity: .45; }
+  #rain { position: fixed; inset: 0; width: 100%; height: 100%; }
   .card { position: relative; margin: auto; width: min(540px, 100%); padding: 22px 20px 18px; border-radius: 26px; text-align: center; }
   .langsw { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.06); margin-bottom: 14px; }
   .langsw button { -webkit-appearance: none; appearance: none; border: 0; background: transparent; cursor: pointer; padding: 5px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 700; color: var(--faint); }
-  .langsw button.on { color: #000; background: var(--a); }
-  .logo { margin: 0 0 8px; font-size: clamp(7px, 2vw, 11.5px); line-height: 1.12; color: var(--a); white-space: pre; text-shadow: 0 0 14px rgba(0,255,136,.55); overflow: hidden; }
+  .langsw button.on { color: #0b1020; background: var(--a); }
+  .orb { width: 74px; height: 74px; margin: 4px auto 14px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff 0%, var(--a) 30%, var(--a2) 70%, transparent 72%);
+    box-shadow: 0 0 50px rgba(143,180,255,.45); animation: breathe 8s ease-in-out infinite; }
+  @keyframes breathe { 0%, 100% { transform: scale(.82); opacity: .8; } 45% { transform: scale(1.08); opacity: 1; } }
+  .title { margin: 0 0 8px; font-size: clamp(26px, 6vw, 34px); font-weight: 800; letter-spacing: -.5px; background: linear-gradient(135deg, #fff, var(--a2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  @media (prefers-reduced-motion: reduce) { .orb { animation: none; } }
   .tagline { margin: 0 auto 16px; max-width: 420px; font-size: 14px; line-height: 1.55; color: var(--muted); }
   .tips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 18px; }
   .tips div { padding: 12px 6px 10px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); font-size: 11.5px; color: var(--muted); line-height: 1.35; }
   .tips i { display: block; font-style: normal; font-size: 28px; margin-bottom: 6px; }
-  #go { -webkit-appearance: none; appearance: none; border: 0; cursor: pointer; display: block; width: 100%; padding: 16px; border-radius: 16px; background: var(--a); color: #000;
-    font-weight: 800; letter-spacing: 3px; font-size: 15px; box-shadow: 0 10px 36px rgba(0,255,136,.3); }
+  #go { -webkit-appearance: none; appearance: none; border: 0; cursor: pointer; display: block; width: 100%; padding: 16px; border-radius: 999px; background: linear-gradient(135deg, var(--a), var(--a2)); color: #0b1020;
+    font-weight: 800; letter-spacing: 1px; font-size: 16px; box-shadow: 0 12px 40px rgba(143,180,255,.28); }
   #go[disabled] { cursor: progress; opacity: .7; }
   #status { min-height: 18px; margin-top: 12px; font-size: 12.5px; color: var(--muted); white-space: pre-wrap; }
   #status.err { color: #ff9aa8; }
@@ -148,9 +156,11 @@
 <canvas id="hud"></canvas>
 <div class="vig"></div>
 <div id="flash"></div>
+<div id="breathTxt"><b id="bPhase"></b><span id="bCount"></span></div>
 <div id="err"></div>
 
 <nav id="rail" class="glass ui" aria-label="Menu">
+  <button class="rb" id="rBreath"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.5" opacity=".55"/><circle cx="12" cy="12" r="10.5" opacity=".25"/></svg></button>
   <button class="rb" id="rShape"><span class="glyph" id="shapeGlyph">✦</span></button>
   <button class="rb" id="rColor"><span class="sw"></span></button>
   <button class="rb" id="rBg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="12" cy="11" r="3"/><path d="M7 19c1-2.5 3-3.5 5-3.5s4 1 5 3.5"/></svg></button>
@@ -181,12 +191,8 @@
   <canvas id="rain"></canvas>
   <div class="card glass">
     <div class="langsw"><button data-l="uz">O'ZBEKCHA</button><button data-l="en">ENGLISH</button></div>
-<pre class="logo">███╗   ██╗███████╗██╗   ██╗██████╗  █████╗ ██╗
-████╗  ██║██╔════╝██║   ██║██╔══██╗██╔══██╗██║
-██╔██╗ ██║█████╗  ██║   ██║██████╔╝███████║██║
-██║╚██╗██║██╔══╝  ██║   ██║██╔══██╗██╔══██║██║
-██║ ╚████║███████╗╚██████╔╝██║  ██║██║  ██║███████╗
-╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝  L I N K</pre>
+<div class="orb"></div>
+    <h1 class="title">Neural Link</h1>
     <p class="tagline" data-i="tagline"></p>
     <div class="tips" id="tips"></div>
     <button id="go" data-i="start"></button>
@@ -228,30 +234,32 @@ const store = { get(k) { try { return localStorage.getItem(k); } catch { return 
 // ============================================================
 const I18N = {
   uz: {
-    tagline: "Minglab nurli zarrachalar qo'lingizga ergashadi, yurak qilsangiz — yurakka, so'z yozsangiz — o'sha narsaga aylanadi.",
-    tips: [["✋", "qo'lni harakatlantiring — zarrachalar ergashadi"], ["🫶", "yurak qiling — sevgi paydo bo'ladi"], ["✍️", "so'z yozing — coffee, sevgi, yulduz…"]],
+    tagline: "Tinchlantiruvchi nur zarrachalari. Qo'lingizni sekin harakatlantiring, nafas mashqini qiling, sevimli so'zingizni yozing.",
+    tips: [["✋", "qo'lni sekin harakatlantiring — nurlar ergashadi"], ["🌬️", "nafas mashqi — shar bilan birga nafas oling"], ["🫶", "yurak qiling yoki so'z yozing"]],
     start: "BOSHLASH", loading: "YUKLANMOQDA…", foot: "qurilmangizda ishlaydi · video hech qayerga yuborilmaydi",
     sCam: "Kamera ochilmoqda…", sModel: "Qo'l kuzatuvi yuklanmoqda…", denied: "Kameraga ruxsat berilmadi. Brauzer sozlamalaridan kameraga ruxsat bering va sahifani yangilang.",
     insecure: "Kamera faqat https manzilda ishlaydi.", noCam: "Kamera topilmadi.", error: "Xatolik",
     placeholder: "So'z yozing: coffee, sevgi, yulduz…", snd: "Ovoz", lang: "Til", cam: "Kamerani almashtirish", share: "ULASHISH", on: "YONIQ", off: "O'CHIQ",
-    t: { hand: "✋ Qo'lingizni kameraga ko'rsating", move: "✋ Qo'lni harakatlantiring — zarrachalar ergashadi", open: "🖐 Kaftni oching yoki musht qiling — zarrachalar tarqaladi yoki to'planadi",
+    t: { hand: "✋ Qo'lingizni kameraga ko'rsating", move: "✋ Qo'lni sekin harakatlantiring — nurlar ergashadi", open: "🖐 Kaftni oching yoki musht qiling — nurlar yoyiladi yoki to'planadi", breath: "🌬️ O'ngdagi ◎ tugmasi — nafas mashqi",
       heart: "🫶 Ikki qo'l bilan (yoki 🫰 barmoq bilan) yurak qiling", word: "✍️ Pastga so'z yozing — zarrachalar o'shanga aylanadi", fist: "✊ Musht qiling — so'z tarqaladi",
       shape: "✦ O'ngdagi menyudan shakl tanlang — keyin uni qo'l bilan boshqaring", ctl: "🤏 Barmoqni yozing — kattalashadi · 🔄 bilakni buring — aylanadi · 🙌 ikki qo'l — cho'zing" },
     live: "JONLI", love: "SEVGI",
-    shapes: ["Erkin", "Shar", "Kub", "Yulduz", "DNK", "Halqa", "Galaktika"], bgCam: "Fon: kamera", bgBlack: "Fon: qora", shapeT: "Shakl", colorT: "Rang", skelT: "Qo'l skeleti", shotT: "Surat", recT: "Video",
+    shapes: ["Erkin", "Shar", "Kub", "Yulduz", "DNK", "Halqa", "Galaktika"], bgCam: "Fon: kamera", bgBlack: "Fon: tungi osmon", breathT: "Nafas mashqi",
+    bIn: "Nafas oling", bHold: "Ushlab turing", bOut: "Sekin chiqaring", bRest: "Dam oling", shapeT: "Shakl", colorT: "Rang", skelT: "Qo'l skeleti", shotT: "Surat", recT: "Video",
   },
   en: {
-    tagline: "Thousands of glowing particles follow your hand, become a heart when you make one, and turn into anything you type.",
-    tips: [["✋", "move your hand — particles follow"], ["🫶", "make a heart — love appears"], ["✍️", "type a word — coffee, star, love…"]],
+    tagline: "Calming particles of light. Move your hand slowly, breathe along with the glow, or type a favourite word.",
+    tips: [["✋", "move your hand slowly — the light follows"], ["🌬️", "breathing — breathe with the glowing ball"], ["🫶", "make a heart or type a word"]],
     start: "START", loading: "LOADING…", foot: "runs on your device · video never leaves it",
     sCam: "Opening camera…", sModel: "Loading hand tracking…", denied: "Camera access was denied. Allow the camera in your browser settings and reload.",
     insecure: "The camera only works over https.", noCam: "No camera found.", error: "Error",
     placeholder: "Type a word: coffee, love, star…", snd: "Sound", lang: "Language", cam: "Switch camera", share: "SHARE", on: "ON", off: "OFF",
-    t: { hand: "✋ Show your hand to the camera", move: "✋ Move your hand — the particles follow", open: "🖐 Open your palm or make a fist — they spread or gather",
+    t: { hand: "✋ Show your hand to the camera", move: "✋ Move your hand slowly — the light follows", open: "🖐 Open your palm or make a fist — they spread or gather", breath: "🌬️ Tap ◎ on the right — breathing exercise",
       heart: "🫶 Make a heart with two hands (or 🫰 with your fingers)", word: "✍️ Type a word below — the particles become it", fist: "✊ Make a fist — the word scatters",
       shape: "✦ Pick a shape from the right menu — then control it with your hand", ctl: "🤏 Spread fingers — bigger · 🔄 twist wrist — rotate · 🙌 two hands — stretch" },
     live: "LIVE", love: "LOVE",
-    shapes: ["Free", "Sphere", "Cube", "Star", "DNA", "Ring", "Galaxy"], bgCam: "Background: camera", bgBlack: "Background: black", shapeT: "Shape", colorT: "Color", skelT: "Hand skeleton", shotT: "Photo", recT: "Video",
+    shapes: ["Free", "Sphere", "Cube", "Star", "DNA", "Ring", "Galaxy"], bgCam: "Background: camera", bgBlack: "Background: night sky", breathT: "Breathing",
+    bIn: "Breathe in", bHold: "Hold", bOut: "Breathe out slowly", bRest: "Rest", shapeT: "Shape", colorT: "Color", skelT: "Hand skeleton", shotT: "Photo", recT: "Video",
   },
 };
 let lang = store.get("nl-lang") || (/^en/i.test(navigator.language || "") ? "en" : "uz");
@@ -347,31 +355,34 @@ function findEmoji(text) {
 // ============================================================
 //  Sozlamalar
 // ============================================================
-const PALETTES = [["#00ff88", "#00e5ff"], ["#00c8ff", "#8a7bff"], ["#ff4dd8", "#8a5bff"], ["#ffc23a", "#ff5a1f"], ["#ff3d6e", "#ffa0d8"], ["#f2fbff", "#8fdcff"]];
-const S = { color: clamp(parseInt(store.get("nl-color") ?? "0", 10) || 0, 0, PALETTES.length - 1), skel: store.get("nl-skel") !== "0", sound: store.get("nl-snd") !== "0",
-  shape: clamp(parseInt(store.get("nl-pshape") ?? "0", 10) || 0, 0, 6), black: store.get("nl-black") === "1" };
+// tinch ranglar: aurora, lavanda, okean, shaftoli, sakura, oy nuri
+const PALETTES = [["#8ff0d6", "#8fb4ff"], ["#c3b2ff", "#8fd8ff"], ["#6fd8ff", "#5f86ff"], ["#ffc9a0", "#ff9fb8"], ["#ffbfdc", "#c7b8ff"], ["#f0f6ff", "#a9cbff"]];
+const S = { color: clamp(parseInt(store.get("nl-color") ?? "0", 10) || 0, 0, PALETTES.length - 1), skel: store.get("nl-skel") === "1", sound: store.get("nl-snd") !== "0",
+  shape: clamp(parseInt(store.get("nl-pshape") ?? "0", 10) || 0, 0, 6), black: store.get("nl-black") !== "0", breath: false };
 const SHAPE_GLYPH = ["✦", "●", "■", "★", "🧬", "◯", "🌀"];
 let learned = {}; try { learned = JSON.parse(store.get("nl-learned2") || "{}") || {}; } catch {}
 function learn(k) { if (learned[k]) return; learned[k] = 1; store.set("nl-learned2", JSON.stringify(learned)); }
 
 // ============================================================
-//  Boshlash ekrani (matritsa yomg'iri)
+//  Boshlash ekrani — sekin suzuvchi yumshoq nurlar
 // ============================================================
 const rainCv = $("rain"), rainCtx = rainCv.getContext("2d");
-const KATA = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜ0123456789";
-let drops = [], rainOn = true;
-function rainResize() { rainCv.width = innerWidth; rainCv.height = innerHeight; drops = range(Math.ceil(innerWidth / 16), () => Math.random() * -60); }
+let motes = [], rainOn = true;
+function rainResize() { rainCv.width = innerWidth; rainCv.height = innerHeight;
+  motes = range(Math.round(Math.min(70, innerWidth * innerHeight / 14000)), () => ({ x: Math.random() * innerWidth, y: Math.random() * innerHeight, r: 1 + Math.random() * 2.6, s: 6 + Math.random() * 14, p: Math.random() * TAU, c: Math.random() })); }
 rainResize(); addEventListener("resize", rainResize);
-(function rainLoop() {
+(function rainLoop(ts) {
   if (!rainOn) return;
-  rainCtx.fillStyle = "rgba(0,0,0,.08)"; rainCtx.fillRect(0, 0, rainCv.width, rainCv.height);
-  rainCtx.font = "15px monospace";
-  drops.forEach((y, i) => {
-    rainCtx.fillStyle = Math.random() < 0.04 ? "#e0fff0" : PALETTES[S.color][0];
-    rainCtx.fillText(KATA[(Math.random() * KATA.length) | 0], i * 16, y * 16);
-    drops[i] = y * 16 > rainCv.height && Math.random() > 0.975 ? 0 : y + 1;
-  });
-  setTimeout(() => requestAnimationFrame(rainLoop), 45);
+  const tt = (ts || 0) / 1000, [a, b] = PALETTES[S.color];
+  rainCtx.clearRect(0, 0, rainCv.width, rainCv.height);
+  for (const m of motes) {
+    const y = ((m.y - tt * m.s) % rainCv.height + rainCv.height) % rainCv.height, x = m.x + Math.sin(tt * 0.3 + m.p) * 18;
+    rainCtx.globalAlpha = 0.25 + 0.35 * (0.5 + 0.5 * Math.sin(tt * 0.8 + m.p));
+    rainCtx.fillStyle = m.c < 0.5 ? a : b; rainCtx.shadowColor = rainCtx.fillStyle; rainCtx.shadowBlur = 12;
+    rainCtx.beginPath(); rainCtx.arc(x, y, m.r, 0, TAU); rainCtx.fill();
+  }
+  rainCtx.globalAlpha = 1; rainCtx.shadowBlur = 0;
+  requestAnimationFrame(rainLoop);
 })();
 
 // ============================================================
@@ -484,11 +495,25 @@ function tone(f, dur, vol, delay = 0, type = "sine") {
   o.connect(g); g.connect(master); o.start(tt); o.stop(tt + dur + 0.05);
 }
 const SND = {
-  tap: () => tone(1200, 0.08, 0.03),
-  form: () => [523, 659, 784].forEach((f, i) => tone(f, 0.7, 0.05, i * 0.06)),
-  love: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 1.2, 0.05, i * 0.08)),
-  scatter: () => tone(300, 0.35, 0.05, 0, "triangle"),
+  tap: () => tone(660, 0.18, 0.02),
+  form: () => [392, 494, 587].forEach((f, i) => tone(f, 1.6, 0.035, i * 0.12)),
+  love: () => [392, 494, 587, 784].forEach((f, i) => tone(f, 2.2, 0.035, i * 0.16)),
+  scatter: () => tone(220, 1.0, 0.03),
+  bIn: () => { tone(294, 3.5, 0.03); tone(440, 3.5, 0.015, 0.2); },
+  bOut: () => { tone(220, 5, 0.03); tone(330, 5, 0.015, 0.2); },
 };
+// juda past ovozli tinch fon (ovoz yoqilganda)
+let pad = null;
+function updatePad() {
+  if (!actx) return;
+  if (!pad) {
+    pad = actx.createGain(); pad.gain.value = 0.0001; pad.connect(master);
+    const lp = actx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 700; lp.connect(pad);
+    for (const [f, d] of [[110, 0], [164.8, 3], [220, -4], [277.2, 2]]) { const o = actx.createOscillator(); o.type = "sine"; o.frequency.value = f; o.detune.value = d; const g = actx.createGain(); g.gain.value = 0.25;
+      const l = actx.createOscillator(), lg = actx.createGain(); l.frequency.value = 0.05 + Math.random() * 0.08; lg.gain.value = 0.2; l.connect(lg); lg.connect(g.gain); l.start(); o.connect(g); g.connect(lp); o.start(); }
+  }
+  const tt = actx.currentTime; pad.gain.cancelScheduledValues(tt); pad.gain.setValueAtTime(pad.gain.value, tt); pad.gain.linearRampToValueAtTime(S.sound ? 0.05 : 0.0001, tt + 2.5);
+}
 const buzz = ms => { try { navigator.vibrate?.(ms); } catch {} };
 
 // ============================================================
@@ -526,8 +551,8 @@ function initParticles() {
   for (let i = 0; i < N; i++) {
     const r = Math.random();
     P.x[i] = W / 2 + (Math.random() - .5) * W; P.y[i] = H / 2 + (Math.random() - .5) * H;
-    P.k[i] = 5 + Math.random() * 17; P.ang[i] = Math.random() * TAU; P.rad[i] = Math.sqrt(Math.random()) * (0.4 + Math.random() * 0.8);
-    P.spd[i] = (Math.random() < 0.5 ? -1 : 1) * (0.4 + Math.random() * 1.6); P.seed[i] = Math.random() * 100; P.base[i] = r;
+    P.k[i] = 3 + Math.random() * 9; P.ang[i] = Math.random() * TAU; P.rad[i] = Math.sqrt(Math.random()) * (0.4 + Math.random() * 0.8);
+    P.spd[i] = (Math.random() < 0.5 ? -1 : 1) * (0.2 + Math.random() * 0.7); P.seed[i] = Math.random() * 100; P.base[i] = r;
     P.hand[i] = i & 1;
   }
   applyPalette(true);
@@ -592,9 +617,25 @@ function genShape(id) {
 }
 const shp = { cx: innerWidth / 2, cy: innerHeight * 0.45, scale: 160, yaw: 0, pitch: 0.35, roll: 0, zoom: 1, tcx: innerWidth / 2, tcy: innerHeight * 0.45, tscale: 160,
   tyaw: 0, tpitch: 0.35, troll: 0, spin: 0, zMin: 9, zMax: 0 };
-function baseMode() { return wordForm ? ["form", wordForm] : S.shape > 0 ? ["shape", null] : ["swarm", null]; }
+function baseMode() { return S.breath ? ["breath", null] : wordForm ? ["form", wordForm] : S.shape > 0 ? ["shape", null] : ["swarm", null]; }
+// 🌬️ nafas mashqi: 4 s nafas olish · 2 s ushlab turish · 6 s chiqarish · 1 s dam
+const BR = [["bIn", 4], ["bHold", 2], ["bOut", 6], ["bRest", 1]], BR_T = 13;
+const br = { t0: 0, phase: -1, v: 0, cx: innerWidth / 2, cy: innerHeight * 0.48 };
+function breathState(now) {
+  let e = ((now - br.t0) / 1000) % BR_T, ph = 0; while (e >= BR[ph][1]) { e -= BR[ph][1]; ph++; }
+  const u = e / BR[ph][1], ease = x => 0.5 - 0.5 * Math.cos(Math.PI * x);
+  const v = ph === 0 ? ease(u) : ph === 1 ? 1 : ph === 2 ? 1 - ease(u) : 0;
+  return { ph, v, left: Math.ceil(BR[ph][1] - e) };
+}
+function setBreath(on) {
+  S.breath = on; br.t0 = performance.now(); br.phase = -1; if (on) learn("breath");
+  $("breathTxt").classList.toggle("show", on); $("rBreath").classList.toggle("on", on);
+  if (on || !(mode === "form" && form && form.kind === "heart")) { const [m, f] = baseMode(); setMode(m, f, true); }
+  SND.tap(); buzz(10);
+}
 function setShape(i) {
   S.shape = i; store.set("nl-pshape", i); if (i > 0) learn("shape");
+  if (S.breath && i > 0) { setBreath(false); }
   if (!(mode === "form" && form)) { const [m, f] = baseMode(); setMode(m, f, true); }
   renderUi(); SND.tap(); buzz(10);
 }
@@ -623,8 +664,8 @@ function buildWord(text) {
     g.fillText(emoji, cw / 2, word ? 120 : ch / 2 + 4); textTop = 300;
   }
   if (word) {
-    let fs = 78; g.font = `800 ${fs}px "JetBrains Mono", ui-monospace, monospace`;
-    while (g.measureText(word.toUpperCase()).width > cw - 20 && fs > 22) { fs -= 4; g.font = `800 ${fs}px "JetBrains Mono", ui-monospace, monospace`; }
+    let fs = 78; g.font = `800 ${fs}px "Manrope", system-ui, sans-serif`;
+    while (g.measureText(word.toUpperCase()).width > cw - 20 && fs > 22) { fs -= 4; g.font = `800 ${fs}px "Manrope", system-ui, sans-serif`; }
     g.fillStyle = "#fff"; g.fillText(word.toUpperCase(), cw / 2, emoji ? textTop : ch / 2);
   }
   const textY0 = emoji ? 230 : 0;
@@ -658,13 +699,15 @@ function setMode(m, f = null, force = false) {
   if (!force && m === mode && f === form) return;
   mode = m; form = f;
   if (f) assign(f); else if (m === "shape") genShape(S.shape); else applyPalette();
-  for (let i = 0; i < N; i++) { const a = Math.random() * TAU, v = 120 + Math.random() * 380; P.vx[i] += Math.cos(a) * v; P.vy[i] += Math.sin(a) * v; }
+  if (m === "breath") return;   // nafas rejimi sekin, sakrashsiz boshlanadi
+  for (let i = 0; i < N; i++) { const a = Math.random() * TAU, v = 30 + Math.random() * 110; P.vx[i] += Math.cos(a) * v; P.vy[i] += Math.sin(a) * v; }
 }
 function showWord(text) {
   text = text.trim();
   if (!text) { clearWord(); return; }
   wordForm = buildWord(text);
   if (!wordForm.pts.length) { wordForm = null; return; }
+  if (S.breath) setBreath(false);
   if (Date.now() > heartUntil) setMode("form", wordForm);
   $("clear").hidden = false; SND.form(); buzz(15); learn("word");
 }
@@ -787,7 +830,7 @@ function render(now) {
   if (form) {
     if (form.kind === "heart") {
       if (heartCenter) { cx = heartCenter.x; cy = heartCenter.y; }
-      sc = heartSize / 100; const p = clock % 0.95; beat = 1 + Math.exp(-(((p - 0.08) / 0.05) ** 2)) * 0.12 + Math.exp(-(((p - 0.28) / 0.06) ** 2)) * 0.07;
+      sc = heartSize / 100; beat = 1 + 0.06 * Math.sin(clock * 2.2);   // yumshoq "nafas oluvchi" yurak
     } else {
       const tw = Math.min(W * (W < 640 ? 0.78 : 0.5), 520); sc = tw / form.w;
       if (hands.length) {
@@ -806,12 +849,20 @@ function render(now) {
   }
 
   // shakl holati (silliq)
+  if (S.breath) {
+    const b = breathState(now);
+    if (b.ph !== br.phase) { br.phase = b.ph; $("bPhase").textContent = t(BR[b.ph][0]); if (b.ph === 0) { SND.bIn(); buzz(8); } else if (b.ph === 2) SND.bOut(); }
+    $("bCount").textContent = b.left;
+    br.v = b.v;
+    const tx0 = hands.length ? palmOf(hands[0].lm).x : W / 2, ty0 = hands.length ? palmOf(hands[0].lm).y - hands[0].len * 0.6 : H * 0.5, e = 1 - Math.exp(-2.5 * dt);
+    br.cx += (clamp(tx0, W * 0.2, W * 0.8) - br.cx) * e; br.cy += (clamp(ty0, H * 0.32, H * 0.68) - br.cy) * e;
+  }
   if (mode === "shape") {
     const noHand = !hands.length, e = 1 - Math.exp(-10 * dt);
     if (noHand) { shp.tcx = W / 2; shp.tcy = H * 0.45; shp.tscale = Math.min(W, H) * 0.24; shp.tyaw = 0; shp.troll = 0; shp.tpitch = 0.35; }
     shp.cx += (shp.tcx - shp.cx) * e; shp.cy += (shp.tcy - shp.cy) * e; shp.scale += (shp.tscale - shp.scale) * (1 - Math.exp(-7 * dt));
     shp.yaw += (shp.tyaw - shp.yaw) * e; shp.pitch += (shp.tpitch - shp.pitch) * e; shp.roll += (shp.troll - shp.roll) * e;
-    shp.spin += dt * (S.shape === 6 ? 0.35 : 0.5);
+    shp.spin += dt * (S.shape === 6 ? 0.22 : 0.3);
   }
   const Y = shp.yaw + shp.spin, cyw = Math.cos(Y), syw = Math.sin(Y), cpt = Math.cos(shp.pitch), spt = Math.sin(shp.pitch), crl = Math.cos(shp.roll), srl = Math.sin(shp.roll);
 
@@ -820,7 +871,12 @@ function render(now) {
   for (let i = 0; i < N; i++) {
     let tx, ty, k, damp;
     let depth = 1;
-    if (mode === "shape") {
+    if (mode === "breath") {
+      const Rb = Math.min(W, H) * (0.09 + 0.2 * br.v), rr = Math.sqrt(P.base[i]), ang = P.ang[i] + clock * 0.06 * P.spd[i];
+      const wob = 1 + 0.03 * Math.sin(clock * 0.9 + P.seed[i]);
+      tx = br.cx + Math.cos(ang) * rr * Rb * wob; ty = br.cy + Math.sin(ang) * rr * Rb * wob;
+      k = 10 + P.k[i]; damp = 6; depth = 0.55 + 0.45 * (1 - rr * 0.6) * (0.7 + 0.3 * br.v);
+    } else if (mode === "shape") {
       const x0 = P.sx[i], y0 = P.sy[i], z0 = P.sz[i];
       const x1 = x0 * cyw + z0 * syw, z1 = -x0 * syw + z0 * cyw;
       const y2 = y0 * cpt - z1 * spt, z2 = y0 * spt + z1 * cpt;
@@ -828,21 +884,21 @@ function render(now) {
       tx = shp.cx + x3 * shp.scale * f; ty = shp.cy - y3 * shp.scale * f; depth = 0.45 + 0.55 * clamp((z2 + 1) / 2, 0, 1);
       k = 30 + P.k[i]; damp = 9;
     } else if (mode === "form" && form) {
-      const j = Math.sin(clock * 3 + P.seed[i]) * 0.8;
-      tx = formCenter.x + P.fx[i] * sc * beat + j; ty = formCenter.y + P.fy[i] * sc * beat + Math.cos(clock * 2.6 + P.seed[i]) * 0.8;
+      const j = Math.sin(clock * 1.2 + P.seed[i]) * 1.2;
+      tx = formCenter.x + P.fx[i] * sc * beat + j; ty = formCenter.y + P.fy[i] * sc * beat + Math.cos(clock * 1.0 + P.seed[i]) * 1.2;
       k = 26 + P.k[i]; damp = 9;
     } else {
       const a = anchors.length ? anchors[P.hand[i] % anchors.length] : { x: idle.x, y: idle.y, R: Math.min(W, H) * 0.22 };
       const ang = P.ang[i] + clock * P.spd[i], r = P.rad[i] * a.R * (1 + 0.15 * Math.sin(clock * 1.7 + P.seed[i]));
-      tx = a.x + Math.cos(ang) * r + Math.sin(P.y[i] * 0.012 + clock * 1.3) * 10; ty = a.y + Math.sin(ang) * r * 0.85 + Math.cos(P.x[i] * 0.012 + clock * 1.1) * 10;
-      k = P.k[i]; damp = 2.6 + P.k[i] * 0.12;
+      tx = a.x + Math.cos(ang) * r + Math.sin(P.y[i] * 0.01 + clock * 0.6) * 12; ty = a.y + Math.sin(ang) * r * 0.85 + Math.cos(P.x[i] * 0.01 + clock * 0.5) * 12;
+      k = P.k[i]; damp = 2.4 + P.k[i] * 0.16;
     }
     let ax = (tx - P.x[i]) * k - P.vx[i] * damp, ay = (ty - P.y[i]) * k - P.vy[i] * damp;
     P.vx[i] += ax * dt; P.vy[i] += ay * dt; P.x[i] += P.vx[i] * dt; P.y[i] += P.vy[i] * dt;
     P.cr[i] += (P.tr[i] - P.cr[i]) * cAlpha; P.cg[i] += (P.tg[i] - P.cg[i]) * cAlpha; P.cb[i] += (P.tb[i] - P.cb[i]) * cAlpha;
-    const sp = Math.min(1, Math.hypot(P.vx[i], P.vy[i]) / 900);
+    const sp = Math.min(1, Math.hypot(P.vx[i], P.vy[i]) / 1400) * 0.6;
     pa[i*3] = P.x[i]; pa[i*3+1] = P.y[i];
-    const tw = mode === "form" ? 0.85 + 0.15 * Math.sin(clock * 5 + P.seed[i]) : 0.75 + 0.25 * Math.sin(clock * 3 + P.seed[i]);
+    const tw = mode === "form" ? 0.88 + 0.12 * Math.sin(clock * 1.6 + P.seed[i]) : 0.72 + 0.28 * Math.sin(clock * 1.1 + P.seed[i]);
     ca[i*3] = (P.cr[i] * tw + sp * 0.3) * depth; ca[i*3+1] = (P.cg[i] * tw + sp * 0.3) * depth; ca[i*3+2] = (P.cb[i] * tw + sp * 0.3) * depth;
     sa[i] = (mode === "form" ? sizeBase * 0.95 : mode === "shape" ? sizeBase * (0.7 + 0.5 * depth) : sizeBase * (0.6 + P.base[i] * 0.9)) * (form && form.kind === "heart" ? beat : 1);
   }
@@ -860,17 +916,16 @@ const HC = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11]
 function drawHud(now) {
   hud.setTransform(hudPr, 0, 0, hudPr, 0, 0); hud.clearRect(0, 0, W, H);
   const A = PALETTES[S.color][0];
-  hud.font = `800 11px "JetBrains Mono", monospace`; hud.textAlign = "left"; hud.fillStyle = A; hud.fillText("NEURAL LINK", 16, 26 + safeTop());
-  hud.fillStyle = rec ? "#ff3355" : A; hud.globalAlpha = 0.5 + 0.5 * Math.sin(now / 300); hud.beginPath(); hud.arc(20, 40 + safeTop(), 3, 0, TAU); hud.fill(); hud.globalAlpha = 1;
-  hud.font = `600 10px "JetBrains Mono", monospace`; hud.fillStyle = rec ? "#ff3355" : "rgba(238,252,246,.55)";
-  hud.fillText(rec ? `REC ${Math.floor((now - rec.start) / 1000)}s` : t("live"), 30, 44 + safeTop());
+  hud.font = `700 13px "Manrope", system-ui, sans-serif`; hud.textAlign = "left"; hud.fillStyle = "rgba(242,245,255,.7)"; hud.fillText("Neural Link", 18, 28 + safeTop());
+  if (rec) { hud.fillStyle = "#ff6b81"; hud.beginPath(); hud.arc(23, 44 + safeTop(), 3.5, 0, TAU); hud.fill();
+    hud.font = `600 11px "Manrope", system-ui, sans-serif`; hud.fillText(`${Math.floor((now - rec.start) / 1000)}s`, 32, 48 + safeTop()); }
   if (S.skel) for (const h of hands) {
-    hud.strokeStyle = "rgba(255,255,255,.22)"; hud.lineWidth = 1.2; hud.beginPath();
+    hud.strokeStyle = "rgba(255,255,255,.16)"; hud.lineWidth = 1.2; hud.beginPath();
     for (const [p, q] of HC) { hud.moveTo(h.lm[p].x, h.lm[p].y); hud.lineTo(h.lm[q].x, h.lm[q].y); } hud.stroke();
     hud.fillStyle = "rgba(255,255,255,.55)"; for (const j of [4, 8, 12, 16, 20]) { hud.beginPath(); hud.arc(h.lm[j].x, h.lm[j].y, 2.6, 0, TAU); hud.fill(); }
   }
   if (form && form.kind === "heart") {
-    hud.globalAlpha = 0.85; hud.font = `800 ${W < 640 ? 13 : 15}px "JetBrains Mono", monospace`; hud.textAlign = "center"; hud.fillStyle = "#ff8ab8";
+    hud.globalAlpha = 0.85; hud.font = `700 ${W < 640 ? 15 : 18}px "Manrope", system-ui, sans-serif`; hud.textAlign = "center"; hud.fillStyle = "#ffb3cf";
     hud.fillText(t("love"), formCenter.x, formCenter.y + heartSize * 1.25); hud.globalAlpha = 1;
   }
 }
@@ -880,8 +935,10 @@ const safeTop = () => safeTopPx;
 let tipText = null;
 function updateTip() {
   let k = null;
-  if (!hands.length) k = learned.hand ? (learned.word ? null : "word") : "hand";
+  if (S.breath) k = null;
+  else if (!hands.length) k = learned.hand ? (learned.word ? null : "word") : "hand";
   else if (!learned.move) k = "move";
+  else if (!learned.breath) k = "breath";
   else if (!learned.open) k = "open";
   else if (!learned.heart) k = "heart";
   else if (!learned.word) k = "word";
@@ -899,14 +956,14 @@ function updateTip() {
 // ============================================================
 function drawComposite(g, cw, ch) {
   const k = cw / W;
-  g.save(); g.fillStyle = "#000"; g.fillRect(0, 0, cw, ch);
-  g.filter = "brightness(.62) saturate(.9)";
+  g.save(); { const gr = g.createRadialGradient(cw / 2, ch * .35, 0, cw / 2, ch * .35, Math.max(cw, ch) * .75); gr.addColorStop(0, "#141a3a"); gr.addColorStop(.45, "#0a0d22"); gr.addColorStop(1, "#04050d"); g.fillStyle = gr; } g.fillRect(0, 0, cw, ch);
+  g.filter = "brightness(.55) saturate(.75)";
   if (mirrored) { g.translate(cw, 0); g.scale(-1, 1); }
   if (!S.black) g.drawImage(video, view.x * k, view.y * k, view.w * k, view.h * k); g.restore();
   g.globalCompositeOperation = "screen"; g.drawImage(fxCanvas, 0, 0, cw, ch);
   g.globalCompositeOperation = "source-over"; g.drawImage(hudCanvas, 0, 0, cw, ch);
-  const fs = Math.max(11, Math.round(ch * 0.022)), mark = `NEURAL LINK · ${location.host || "neural-link"}`;
-  g.font = `700 ${fs}px "JetBrains Mono", monospace`; g.textAlign = "right"; g.textBaseline = "alphabetic";
+  const fs = Math.max(11, Math.round(ch * 0.022)), mark = `Neural Link · ${location.host || "neural-link"}`;
+  g.font = `700 ${fs}px "Manrope", system-ui, sans-serif`; g.textAlign = "right"; g.textBaseline = "alphabetic";
   const tw = g.measureText(mark).width; g.fillStyle = "rgba(0,0,0,.55)"; g.fillRect(cw - tw - fs * 1.6, ch - fs * 2.6, tw + fs * 1.2, fs * 1.7);
   g.fillStyle = PALETTES[S.color][0]; g.fillText(mark, cw - fs, ch - fs * 1.25);
 }
@@ -954,7 +1011,7 @@ function renderUi() {
   document.body.classList.toggle("blackbg", S.black); $("rBg").classList.toggle("on", S.black);
   $("shapeGlyph").textContent = SHAPE_GLYPH[S.shape]; $("rShape").classList.toggle("on", S.shape > 0);
   $("shapes").innerHTML = t("shapes").map((n, i) => `<button class="sh ${i === S.shape ? "on" : ""}" data-s="${i}"><i>${SHAPE_GLYPH[i]}</i>${n}</button>`).join("");
-  const tips = { rShape: t("shapeT") + ": " + t("shapes")[S.shape], rColor: t("colorT"), rBg: S.black ? t("bgBlack") : t("bgCam"), rSkel: t("skelT"), rShot: t("shotT"), rRec: t("recT") };
+  const tips = { rBreath: t("breathT"), rShape: t("shapeT") + ": " + t("shapes")[S.shape], rColor: t("colorT"), rBg: S.black ? t("bgBlack") : t("bgCam"), rSkel: t("skelT"), rShot: t("shotT"), rRec: t("recT") };
   for (const [id, lbl] of Object.entries(tips)) { $(id).title = lbl; $(id).setAttribute("aria-label", lbl); }
   $("sName").textContent = S.sound ? t("on") : t("off"); $("lName").textContent = lang.toUpperCase();
   tipText = null;
@@ -963,6 +1020,7 @@ function setLang(l) { lang = l; store.set("nl-lang", l); renderUi(); }
 const toggleMore = force => { const o = force ?? !$("more").classList.contains("open"); $("more").classList.toggle("open", o); $("rMore").setAttribute("aria-expanded", o); if (o) $("shapes").classList.remove("open"); };
 const toggleShapes = force => { const o = force ?? !$("shapes").classList.contains("open"); $("shapes").classList.toggle("open", o); if (o) toggleMore(false); };
 $("rShape").onclick = () => { toggleShapes(); SND.tap(); };
+$("rBreath").onclick = () => setBreath(!S.breath);
 $("shapes").onclick = e => { const b = e.target.closest(".sh"); if (b) { setShape(+b.dataset.s); toggleShapes(false); } };
 $("rBg").onclick = () => { S.black = !S.black; store.set("nl-black", S.black ? "1" : "0"); renderUi(); SND.tap(); };
 $("rColor").onclick = () => { S.color = (S.color + 1) % PALETTES.length; store.set("nl-color", S.color); applyPalette(); if (wordForm && mode === "form" && form.kind === "word") { wordForm = buildWord(wordForm.label); setMode("form", wordForm); } SND.tap(); };
@@ -970,7 +1028,7 @@ $("rSkel").onclick = () => { S.skel = !S.skel; store.set("nl-skel", S.skel ? "1"
 $("rShot").onclick = () => { captureRequested = true; };
 $("rRec").onclick = () => rec ? stopRec() : startRec();
 $("rMore").onclick = () => toggleMore();
-$("mSnd").onclick = () => { S.sound = !S.sound; store.set("nl-snd", S.sound ? "1" : "0"); renderUi(); };
+$("mSnd").onclick = () => { S.sound = !S.sound; store.set("nl-snd", S.sound ? "1" : "0"); renderUi(); updatePad(); };
 $("mLang").onclick = () => setLang(lang === "en" ? "uz" : "en");
 $("mCam").onclick = () => switchCamera();
 document.querySelectorAll(".langsw button").forEach(b => b.onclick = () => setLang(b.dataset.l));
@@ -1017,7 +1075,7 @@ $("go").onclick = async () => {
     { const probe = document.createElement("div"); probe.style.cssText = "position:fixed;top:0;padding-top:env(safe-area-inset-top);visibility:hidden";
       document.body.appendChild(probe); safeTopPx = parseFloat(getComputedStyle(probe).paddingTop) || 0; probe.remove(); }
     document.body.classList.add("running"); rainOn = false;
-    detectLoop(); requestAnimationFrame(render); keepAwake();
+    detectLoop(); requestAnimationFrame(render); keepAwake(); updatePad();
     try { const devs = await navigator.mediaDevices.enumerateDevices(); $("mCam").hidden = devs.filter(d => d.kind === "videoinput").length < 2; } catch {}
   } catch (e) {
     console.error(e);
